@@ -58,7 +58,14 @@ def train(df):
 
 def main():
     train_df = pd.read_feather('./data/application_train.csv.feather')
-    train(train_df)
+    pos_train_df = train_df[train_df['TARGET'] == 1]
+    neg_train_df = train_df[train_df['TARGET'] == 0]
+    n_pos = pos_train_df.shape[0]
+    for i in range(10):
+        neg_part_train_df = neg_train_df.sample(n=n_pos)
+        part_df = pd.concat([pos_train_df, neg_part_train_df])
+        part_df = part_df.sample(frac=1)
+        train(part_df)
 
 
 if __name__ == '__main__':

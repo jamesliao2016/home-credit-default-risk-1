@@ -56,8 +56,25 @@ def train(df):
     print("auc:", evals_result['valid']['auc'][bst.best_iteration-1])
 
 
+def split(df):
+    pos_df = df[df['TARGET'] == 1]
+    neg_df = df[df['TARGET'] == 0]
+    n_pos = pos_df.shape[0]
+    n_neg = neg_df.shape[0]
+    n_pos_train = int(0.9*n_pos)
+    n_neg_train = int(0.9*n_neg)
+    train_df = pd.concat([pos_df[:n_pos_train], neg_df[:n_neg_train]])
+    train_df = train_df.sample(frac=1).reset_index()
+    test_df = pd.concat([pos_df[n_pos_train:], neg_df[n_neg_train:]])
+    test_df = test_df.sample(frac=1).reset_index()
+    return train_df, test_df
+
+
 def main():
+    validate = True
     train_df = pd.read_feather('./data/application_train.csv.feather')
+    if validate:
+        train_df, test_df = split(train_df)
     pos_train_df = train_df[train_df['TARGET'] == 1]
     neg_train_df = train_df[train_df['TARGET'] == 0]
     n_pos = pos_train_df.shape[0]

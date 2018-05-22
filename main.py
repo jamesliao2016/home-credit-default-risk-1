@@ -1,8 +1,9 @@
 import pandas as pd
 import lightgbm as lgb
+from sklearn.metrics import roc_auc_score
 
 
-def train(df):
+def train(df, test_df):
     n_train = int(len(df) * 0.9)
     train_df = df[:n_train]
     valid_df = df[n_train:]
@@ -55,6 +56,8 @@ def train(df):
     print("bst1.best_iteration: ", bst.best_iteration)
     print("auc:", evals_result['valid']['auc'][bst.best_iteration-1])
 
+    return bst.predict(test_df[features], bst.best_iteration)
+
 
 def split(df):
     pos_df = df[df['TARGET'] == 1]
@@ -78,11 +81,20 @@ def main():
     pos_train_df = train_df[train_df['TARGET'] == 1]
     neg_train_df = train_df[train_df['TARGET'] == 0]
     n_pos = pos_train_df.shape[0]
-    for i in range(10):
+    n_bagging = 10
+    for i in range(n_bagging):
         neg_part_train_df = neg_train_df.sample(n=n_pos)
         part_df = pd.concat([pos_train_df, neg_part_train_df])
         part_df = part_df.sample(frac=1)
-        train(part_df)
+        test_df['PRED_{}'.format(i)] = train(part_df, test_df)
+
+    test_df['PRED'] = 0
+    for i in range(n_bagging):
+        test_df['PRED'] += test_df['PRED_{}'.format(i)]
+
+    if validate:
+        print('validate auc: {}'.format(
+            roc_auc_score(test_df['TARGET'], test_df['PRED'])))
 
 
 if __name__ == '__main__':

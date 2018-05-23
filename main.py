@@ -3,13 +3,39 @@ import lightgbm as lgb
 from sklearn.metrics import roc_auc_score
 
 
-def train(df, test_df):
+def join_pos_df(df, pos_df):
+    grp = pos_df.groupby('SK_ID_CURR')
+    columns = ['CNT_INSTALMENT_FUTURE']
+    grp = grp[columns].mean()
+    grp.columns = ['{}_mean'.format(c) for c in columns]
+    grp = grp.reset_index()
+    df = df.merge(grp, on='SK_ID_CURR', how='left')
+
+    return df
+
+
+def train(df, test_df, pos_df):
+    sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
+    pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
+    features = [
+        'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
+        'DAYS_BIRTH', 'AMT_ANNUITY', 'AMT_CREDIT',
+    ]
+
+    # POS
+    df = join_pos_df(df, pos_df)
+    features += [
+        'CNT_INSTALMENT_FUTURE_mean',
+    ]
+
+    # credit bureau
+    # 'DAYS_CREDIT',
+
+    # train
     n_train = int(len(df) * 0.9)
     train_df = df[:n_train]
     valid_df = df[n_train:]
-    features = [
-        'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
-    ]
+
     xgtrain = lgb.Dataset(
         train_df[features].values, label=train_df['TARGET'].values,
         feature_name=features,
@@ -56,6 +82,7 @@ def train(df, test_df):
     print("bst1.best_iteration: ", bst.best_iteration)
     print("auc:", evals_result['valid']['auc'][bst.best_iteration-1])
 
+    test_df = join_pos_df(test_df, pos_df)
     return bst.predict(test_df[features], bst.best_iteration)
 
 
@@ -82,11 +109,12 @@ def main():
     neg_train_df = train_df[train_df['TARGET'] == 0]
     n_pos = pos_train_df.shape[0]
     n_bagging = 10
+    pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
     for i in range(n_bagging):
         neg_part_train_df = neg_train_df.sample(n=n_pos)
         part_df = pd.concat([pos_train_df, neg_part_train_df])
         part_df = part_df.sample(frac=1)
-        test_df['PRED_{}'.format(i)] = train(part_df, test_df)
+        test_df['PRED_{}'.format(i)] = train(part_df, test_df, pos_df)
 
     test_df['PRED'] = 0
     for i in range(n_bagging):

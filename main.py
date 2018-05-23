@@ -14,9 +14,23 @@ def join_pos_df(df, pos_df):
     return df
 
 
-def train(df, test_df, pos_df):
+def join_bure_df(df, bure_df):
+    grp = bure_df.groupby('SK_ID_CURR')
+    columns = ['DAYS_CREDIT']
+    grp = grp[columns].mean()
+    grp.columns = ['{}_mean'.format(c) for c in columns]
+    grp = grp.reset_index()
+    df = df.merge(grp, on='SK_ID_CURR', how='left')
+
+    return df
+
+
+def train(df, test_df, pos_df, bure_df):
+    # filter by sample id
     sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
+    bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
+
     features = [
         'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
         'DAYS_BIRTH', 'AMT_ANNUITY', 'AMT_CREDIT',
@@ -29,7 +43,10 @@ def train(df, test_df, pos_df):
     ]
 
     # credit bureau
-    # 'DAYS_CREDIT',
+    df = join_bure_df(df, bure_df)
+    features += [
+        'DAYS_CREDIT_mean',
+    ]
 
     # train
     n_train = int(len(df) * 0.9)
@@ -83,6 +100,7 @@ def train(df, test_df, pos_df):
     print("auc:", evals_result['valid']['auc'][bst.best_iteration-1])
 
     test_df = join_pos_df(test_df, pos_df)
+    test_df = join_bure_df(test_df, bure_df)
     return bst.predict(test_df[features], bst.best_iteration)
 
 
@@ -110,11 +128,12 @@ def main():
     n_pos = pos_train_df.shape[0]
     n_bagging = 10
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
+    bure_df = pd.read_feather('./data/bureau.csv.feather')
     for i in range(n_bagging):
         neg_part_train_df = neg_train_df.sample(n=n_pos)
         part_df = pd.concat([pos_train_df, neg_part_train_df])
         part_df = part_df.sample(frac=1)
-        test_df['PRED_{}'.format(i)] = train(part_df, test_df, pos_df)
+        test_df['PRED_{}'.format(i)] = train(part_df, test_df, pos_df, bure_df)
 
     test_df['PRED'] = 0
     for i in range(n_bagging):

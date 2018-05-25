@@ -45,6 +45,7 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
         'AMT_ANNUITY',
         'AMT_CREDIT',
         'AMT_GOODS_PRICE',  # For consumer loans it is the price of the goods for which the loan is given  # noqa
+        'DAYS_EMPLOYED',  # How many days before the application the person started current employment,time only relative to the application  # noqa
     ]
 
     # POS

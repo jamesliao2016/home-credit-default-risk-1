@@ -1,5 +1,6 @@
 import pandas as pd
 import lightgbm as lgb
+from collections import defaultdict
 from sklearn.metrics import roc_auc_score
 pd.set_option("display.max_columns", 100)
 
@@ -27,7 +28,7 @@ def join_bure_df(df, bure_df):
     return df
 
 
-def train(df, test_df, pos_df, bure_df):
+def train(df, test_df, pos_df, bure_df, importance_summay):
     # filter by sample id
     sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
@@ -104,6 +105,12 @@ def train(df, test_df, pos_df, bure_df):
     print("bst1.best_iteration: ", bst.best_iteration)
     print("auc:", evals_result['valid']['auc'][bst.best_iteration-1])
 
+    importance = bst.feature_importance(iteration=bst.best_iteration)
+    feature_name = bst.feature_name()
+
+    for key, value in zip(feature_name, importance):
+        importance_summay[key] += value / sum(importance)
+
     test_df = join_pos_df(test_df, pos_df)
     test_df = join_bure_df(test_df, bure_df)
     return bst.predict(test_df[features], bst.best_iteration)
@@ -127,18 +134,23 @@ def main():
     validate = True
     train_df = pd.read_feather('./data/application_train.csv.feather')
     if validate:
+        n_bagging = 5
         train_df, test_df = split(train_df)
     pos_train_df = train_df[train_df['TARGET'] == 1]
     neg_train_df = train_df[train_df['TARGET'] == 0]
     n_pos = pos_train_df.shape[0]
-    n_bagging = 10
+    importance_summay = defaultdict(lambda: 0)
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
     bure_df = pd.read_feather('./data/bureau.csv.feather')
     for i in range(n_bagging):
         neg_part_train_df = neg_train_df.sample(n=n_pos)
         part_df = pd.concat([pos_train_df, neg_part_train_df])
         part_df = part_df.sample(frac=1)
-        test_df['PRED_{}'.format(i)] = train(part_df, test_df, pos_df, bure_df)
+        test_df['PRED_{}'.format(i)] = train(
+            part_df, test_df, pos_df, bure_df, importance_summay)
+
+    for key, value in sorted(importance_summay.items(), key=lambda x: -x[1]):
+        print('{} {}'.format(key, value))
 
     test_df['PRED'] = 0
     for i in range(n_bagging):

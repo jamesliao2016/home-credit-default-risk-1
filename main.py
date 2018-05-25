@@ -21,10 +21,14 @@ def join_bure_df(df, bure_df, features):
     grp = bure_df.groupby('SK_ID_CURR')
     for agg, columns in features.items():
         if agg == 'mean':
-            grp = grp[columns].mean()
-        grp.columns = ['{}_{}'.format(c, agg) for c in columns]
-        grp = grp.reset_index()
-        df = df.merge(grp, on='SK_ID_CURR', how='left')
+            g = grp[columns].mean()
+        elif agg == 'max':
+            g = grp[columns].max()
+        else:
+            raise RuntimeError('agg is invalid {}'.format(agg))
+        g.columns = ['{}_{}'.format(c, agg) for c in columns]
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
 
     return df
 
@@ -52,6 +56,10 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
     # credit bureau
     bure_features = {
         'mean': [
+            'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
+            'AMT_CREDIT_SUM'  # Current credit amount for the Credit Bureau credit  # noqa
+        ],
+        'max': [
             'DAYS_CREDIT',
             'AMT_CREDIT_SUM'  # Current credit amount for the Credit Bureau credit  # noqa
         ],

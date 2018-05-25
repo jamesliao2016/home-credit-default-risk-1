@@ -33,7 +33,10 @@ def train(df, test_df, pos_df, bure_df):
 
     features = [
         'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
-        'DAYS_BIRTH', 'AMT_ANNUITY', 'AMT_CREDIT',
+        'DAYS_BIRTH',   # Client's age in days at the time of application,time only relative to the application  # noqa
+        'AMT_ANNUITY',
+        'AMT_CREDIT',
+        'AMT_GOODS_PRICE',  # For consumer loans it is the price of the goods for which the loan is given  # noqa
     ]
 
     # POS

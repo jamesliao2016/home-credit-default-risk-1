@@ -17,13 +17,14 @@ def join_pos_df(df, pos_df):
     return df
 
 
-def join_bure_df(df, bure_df):
+def join_bure_df(df, bure_df, features):
     grp = bure_df.groupby('SK_ID_CURR')
-    columns = ['DAYS_CREDIT']
-    grp = grp[columns].mean()
-    grp.columns = ['{}_mean'.format(c) for c in columns]
-    grp = grp.reset_index()
-    df = df.merge(grp, on='SK_ID_CURR', how='left')
+    for agg, columns in features.items():
+        if agg == 'mean':
+            grp = grp[columns].mean()
+        grp.columns = ['{}_{}'.format(c, agg) for c in columns]
+        grp = grp.reset_index()
+        df = df.merge(grp, on='SK_ID_CURR', how='left')
 
     return df
 
@@ -49,10 +50,16 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
     ]
 
     # credit bureau
-    df = join_bure_df(df, bure_df)
-    features += [
-        'DAYS_CREDIT_mean',
-    ]
+    bure_features = {
+        'mean': [
+            'DAYS_CREDIT',
+            'AMT_CREDIT_SUM'  # Current credit amount for the Credit Bureau credit  # noqa
+        ],
+    }
+    df = join_bure_df(df, bure_df, bure_features)
+    test_df = join_bure_df(test_df, bure_df, bure_features)
+    for agg, columns in bure_features.items():
+        features += ['{}_{}'.format(c, agg) for c in columns]
 
     # train
     n_train = int(len(df) * 0.9)
@@ -112,7 +119,6 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
         importance_summay[key] += value / sum(importance)
 
     test_df = join_pos_df(test_df, pos_df)
-    test_df = join_bure_df(test_df, bure_df)
     return bst.predict(test_df[features], bst.best_iteration)
 
 

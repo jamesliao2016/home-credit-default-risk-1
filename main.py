@@ -58,11 +58,12 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
     bure_features = {
         'mean': [
             'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
-            'AMT_CREDIT_SUM'  # Current credit amount for the Credit Bureau credit  # noqa
+            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
+            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
         ],
         'max': [
             'DAYS_CREDIT',
-            'AMT_CREDIT_SUM'  # Current credit amount for the Credit Bureau credit  # noqa
+            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
         ],
     }
     df = join_bure_df(df, bure_df, bure_features)

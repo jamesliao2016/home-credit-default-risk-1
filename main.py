@@ -5,6 +5,7 @@ pd.set_option("display.max_columns", 100)
 
 
 def join_pos_df(df, pos_df):
+    # TODO: recent balance
     grp = pos_df.groupby('SK_ID_CURR')
     columns = ['CNT_INSTALMENT_FUTURE']
     grp = grp[columns].mean()

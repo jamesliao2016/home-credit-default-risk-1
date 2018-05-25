@@ -104,7 +104,7 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
         evals_result=evals_result,
         num_boost_round=1000,
         early_stopping_rounds=30,
-        verbose_eval=10,
+        verbose_eval=20,
         # feval=feval,
     )
 

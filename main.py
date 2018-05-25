@@ -24,6 +24,8 @@ def join_bure_df(df, bure_df, features):
             g = grp[columns].mean()
         elif agg == 'max':
             g = grp[columns].max()
+        elif agg == 'sum':
+            g = grp[columns].sum()
         else:
             raise RuntimeError('agg is invalid {}'.format(agg))
         g.columns = ['{}_{}'.format(c, agg) for c in columns]
@@ -59,6 +61,9 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
         'mean': [
             'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
+            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
+        ],
+        'sum': [
             'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
         ],
         'max': [

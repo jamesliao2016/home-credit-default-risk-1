@@ -95,19 +95,18 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
         'objective': 'binary',
         'metric': 'auc',
         'learning_rate': 0.1,
-        'num_leaves': (2**3)-1,  # 2^max_depth - 1
-        'max_depth': 3,  # -1 means no limit
+        'num_leaves': (2**5)-1,  # 2^max_depth - 1
+        'max_depth': 5,  # -1 means no limit
         'min_child_samples': 100,
         'max_bin': 100,
         'subsample': 0.7,
         'subsample_freq': 1,
         'colsample_bytree': 0.9,
-        'min_child_weight': 5,
+        'min_child_weight': 2,
         'subsample_for_bin': 200000,
-        'min_split_gain': 0,
+        'min_split_gain': 0.01,
         'reg_alpha': 0,
         'reg_lambda': 0,
-        # 'scale_pos_weight': 200,
         'nthread': 12,
         'verbose': 0,
     }

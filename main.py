@@ -1,6 +1,7 @@
 import pandas as pd
 import lightgbm as lgb
 from sklearn.metrics import roc_auc_score
+pd.set_option("display.max_columns", 100)
 
 
 def join_pos_df(df, pos_df):

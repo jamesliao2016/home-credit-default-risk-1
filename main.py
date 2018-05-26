@@ -84,6 +84,7 @@ def join_pos_df(df, test_df, orig_pos_df, features):
 def join_bure_df(df, test_df, bure_df, features):
     grp = bure_df.groupby('SK_ID_CURR')
     for agg, columns in {
+        'count': [],
         'mean': [
             'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
             'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
@@ -114,7 +115,10 @@ def join_bure_df(df, test_df, bure_df, features):
             'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
         ],
     }.items():
-        if agg == 'mean':
+        if agg == 'count':
+            # description is wrong...
+            g = grp[['SK_ID_BUREAU']].count()
+        elif agg == 'mean':
             g = grp[columns].mean()
         elif agg == 'max':
             g = grp[columns].max()
@@ -124,7 +128,11 @@ def join_bure_df(df, test_df, bure_df, features):
             g = grp[columns].sum()
         else:
             raise RuntimeError('agg is invalid {}'.format(agg))
-        columns = ['bureau_{}_{}'.format(c, agg) for c in columns]
+
+        if agg == 'count':
+            columns = ['bureau_COUNT']
+        else:
+            columns = ['bureau_{}_{}'.format(c, agg) for c in columns]
         g.columns = columns
         features += columns
         g = g.reset_index()
@@ -280,7 +288,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         'learning_rate': 0.1,
         'num_leaves': 2**6,
         'max_depth': 6,  # -1 means no limit
-        'min_child_samples': 200,
+        'min_child_samples': 300,
         'max_bin': 100,
         'subsample': 0.9,
         'subsample_freq': 1,

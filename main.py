@@ -142,6 +142,19 @@ def join_bure_df(df, test_df, bure_df, features):
         df = df.merge(g, on='SK_ID_CURR', how='left')
         test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
+    # categorical
+    for f in [
+        'CREDIT_ACTIVE',  # Status of the Credit Bureau (CB) reported credits
+    ]:
+        g = bure_df.groupby(['SK_ID_CURR', f])['SK_ID_BUREAU'].count()
+        g = g.unstack(1)
+        columns = ['bureau_{}_{}_count'.format(f, c) for c in g.columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
     return df, test_df, features
 
 

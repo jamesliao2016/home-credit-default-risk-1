@@ -24,9 +24,22 @@ def join_pos_df(df, pos_df):
     return df
 
 
-def join_bure_df(df, bure_df, features):
+def join_bure_df(df, test_df, bure_df, features):
     grp = bure_df.groupby('SK_ID_CURR')
-    for agg, columns in features.items():
+    for agg, columns in {
+        'mean': [
+            'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
+            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
+            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
+        ],
+        'sum': [
+            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
+        ],
+        'max': [
+            'DAYS_CREDIT',
+            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
+        ],
+    }.items():
         if agg == 'mean':
             g = grp[columns].mean()
         elif agg == 'max':
@@ -35,11 +48,14 @@ def join_bure_df(df, bure_df, features):
             g = grp[columns].sum()
         else:
             raise RuntimeError('agg is invalid {}'.format(agg))
-        g.columns = ['{}_{}'.format(c, agg) for c in columns]
+        columns = ['bureau_{}_{}'.format(c, agg) for c in columns]
+        g.columns = columns
+        features += columns
         g = g.reset_index()
         df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
-    return df
+    return df, test_df, features
 
 
 def join_credit_df(df, test_df, credit_df, features):
@@ -88,24 +104,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, importance_summay):
     ]
 
     # credit bureau
-    bure_features = {
-        'mean': [
-            'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
-            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
-            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
-        ],
-        'sum': [
-            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
-        ],
-        'max': [
-            'DAYS_CREDIT',
-            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
-        ],
-    }
-    df = join_bure_df(df, bure_df, bure_features)
-    test_df = join_bure_df(test_df, bure_df, bure_features)
-    for agg, columns in bure_features.items():
-        features += ['{}_{}'.format(c, agg) for c in columns]
+    df, test_df, features = join_bure_df(df, test_df, bure_df, features)
 
     # credit card
     df, test_df, features = join_credit_df(df, test_df, credit_df, features)

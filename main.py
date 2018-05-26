@@ -309,15 +309,15 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         'objective': 'binary',
         'metric': 'auc',
         'learning_rate': 0.1,
-        'num_leaves': 2**6,
-        'max_depth': 6,  # -1 means no limit
+        'num_leaves': 255,
+        'max_depth': 7,  # -1 means no limit
         'min_child_samples': 300,
         'max_bin': 100,
         'subsample': 0.9,
         'subsample_freq': 1,
         'colsample_bytree': 0.9,
         'min_child_weight': 2,
-        'subsample_for_bin': 200000,
+        'subsample_for_bin': 10000000,
         'min_split_gain': 0.01,
         'reg_alpha': 0,
         'reg_lambda': 0,

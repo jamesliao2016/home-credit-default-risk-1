@@ -23,20 +23,24 @@ def join_pos_df(df, test_df, orig_pos_df, features):
                 'mean', [
                     'CNT_INSTALMENT',  # Term of previous credit (can change over time) # noqa
                     'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
-                    'SK_DPD_DEF',
-                    'SK_DPD',
+                    'SK_DPD',  # (days past due) during the month of previous credit # noqa
+                    'SK_DPD_DEF',  # DPD during the month with tolerance (debts with low loan amounts are ignored) of the previous credit # noqa
                 ],
             ],
             [
                 'max', [
                     'CNT_INSTALMENT',  # Term of previous credit (can change over time) # noqa
                     'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
+                    'SK_DPD',  # (days past due) during the month of previous credit # noqa
+                    'SK_DPD_DEF',  # DPD during the month with tolerance (debts with low loan amounts are ignored) of the previous credit # noqa
                 ],
             ],
             [
                 'min', [
                     'CNT_INSTALMENT',  # Term of previous credit (can change over time) # noqa
                     'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
+                    'SK_DPD',  # (days past due) during the month of previous credit # noqa
+                    'SK_DPD_DEF',  # DPD during the month with tolerance (debts with low loan amounts are ignored) of the previous credit # noqa
                 ],
             ],
         ]:
@@ -275,9 +279,9 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         'learning_rate': 0.1,
         'num_leaves': 2**6,
         'max_depth': 6,  # -1 means no limit
-        'min_child_samples': 100,
+        'min_child_samples': 200,
         'max_bin': 100,
-        'subsample': 0.7,
+        'subsample': 0.9,
         'subsample_freq': 1,
         'colsample_bytree': 0.9,
         'min_child_weight': 2,
@@ -295,7 +299,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         valid_names=['train', 'valid'],
         evals_result=evals_result,
         num_boost_round=1000,
-        early_stopping_rounds=30,
+        early_stopping_rounds=50,
         verbose_eval=20,
         categorical_feature=cat_feature,
         # feval=feval,

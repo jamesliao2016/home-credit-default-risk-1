@@ -81,11 +81,35 @@ def join_credit_df(df, test_df, credit_df, features):
     return df, test_df, features
 
 
-def train(df, test_df, pos_df, bure_df, credit_df, importance_summay):
+def join_prev_df(df, test_df, prev_df, features):
+    grp = prev_df.groupby('SK_ID_CURR')
+    for agg, columns in [
+        [
+            'mean', [
+                'CNT_PAYMENT',  # Term of previous credit at application of the previous application  # noqa
+            ],
+        ],
+    ]:
+        if agg == 'mean':
+            g = grp[columns].mean()
+        else:
+            raise RuntimeError('agg is invalid {}'.format(agg))
+        columns = ['prev_{}_{}'.format(c, agg) for c in columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
+    return df, test_df, features
+
+
+def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     # filter by sample id
     sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
     bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
+    prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)]
 
     features = [
         'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
@@ -108,6 +132,9 @@ def train(df, test_df, pos_df, bure_df, credit_df, importance_summay):
 
     # credit card
     df, test_df, features = join_credit_df(df, test_df, credit_df, features)
+
+    # prev_df
+    df, test_df, features = join_prev_df(df, test_df, prev_df, features)
 
     # train
     n_train = int(len(df) * 0.9)
@@ -196,12 +223,14 @@ def main():
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
     bure_df = pd.read_feather('./data/bureau.csv.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
+    prev_df = pd.read_feather('./data/previous_application.csv.feather')
     for i in range(n_bagging):
         neg_part_train_df = neg_train_df.sample(n=n_pos)
         part_df = pd.concat([pos_train_df, neg_part_train_df])
         part_df = part_df.sample(frac=1)
         test_df['PRED_{}'.format(i)] = train(
-            part_df, test_df, pos_df, bure_df, credit_df, importance_summay)
+            part_df, test_df, pos_df, bure_df, credit_df, prev_df,
+            importance_summay)
 
     for key, value in sorted(importance_summay.items(), key=lambda x: -x[1]):
         print('{} {}'.format(key, value))

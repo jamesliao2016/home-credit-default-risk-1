@@ -387,6 +387,7 @@ def main():
     test_df['PRED'] = 0
     for i in range(n_bagging):
         test_df['PRED'] += test_df['PRED_{}'.format(i)]
+    test_df['PRED'] /= test_df['PRED'].max()
 
     if validate:
         print('validate auc: {}'.format(

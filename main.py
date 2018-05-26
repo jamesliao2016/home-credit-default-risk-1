@@ -8,6 +8,13 @@ pd.set_option("display.max_columns", 100)
 def join_pos_df(df, pos_df):
     # TODO: recent balance
     grp = pos_df.groupby('SK_ID_CURR')
+
+    # count
+    g = grp[['SK_ID_PREV']].count()
+    g.columns = ['POS_COUNT']
+    df = df.merge(g.reset_index(), on='SK_ID_CURR', how='left')
+
+    # agg
     columns = ['CNT_INSTALMENT_FUTURE']
     grp = grp[columns].mean()
     grp.columns = ['{}_mean'.format(c) for c in columns]
@@ -53,6 +60,7 @@ def train(df, test_df, pos_df, bure_df, importance_summay):
     # POS
     df = join_pos_df(df, pos_df)
     features += [
+        'POS_COUNT',
         'CNT_INSTALMENT_FUTURE_mean',
     ]
 

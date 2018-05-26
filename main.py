@@ -79,10 +79,16 @@ def join_credit_df(df, test_df, credit_df, features):
     # TODO: recent credit
     grp = credit_df.groupby('SK_ID_CURR')
     for agg, columns in [
-        ['mean', [
-            'SK_DPD',
-            'SK_DPD_DEF',
-        ]],
+        [
+            'mean', [
+                'SK_DPD',
+                'SK_DPD_DEF',
+                'CNT_DRAWINGS_ATM_CURRENT',  # Number of drawings at ATM during this month on the previous credit # noqa
+                'CNT_DRAWINGS_CURRENT',  # Number of drawings during this month on the previous credit # noqa
+                'CNT_DRAWINGS_OTHER_CURRENT',  # Number of other drawings during this month on the previous credit # noqa
+                'CNT_DRAWINGS_POS_CURRENT',  # Number of drawings for goods during this month on the previous credit # noqa
+            ],
+        ],
     ]:
         if agg == 'mean':
             g = grp[columns].mean()

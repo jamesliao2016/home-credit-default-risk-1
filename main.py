@@ -364,10 +364,13 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     df, test_df, features = join_prev_df(df, test_df, prev_df, features)
 
     # cat features
+    n_train = len(df)
+    df = pd.concat([df, test_df]).reset_index(drop=True)
+    df[cat_feature] = df[cat_feature].fillna('NaN')
     df[cat_feature] = df[cat_feature].astype('category')
     df[cat_feature] = df[cat_feature].apply(lambda x: x.cat.codes)
-    test_df[cat_feature] = test_df[cat_feature].astype('category')
-    test_df[cat_feature] = test_df[cat_feature].apply(lambda x: x.cat.codes)
+    test_df = df[n_train:].reset_index(drop=True)
+    df = df[:n_train].reset_index(drop=True)
 
     # train
     n_train = int(len(df) * 0.9)

@@ -188,6 +188,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     cat_feature = [
         'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa
         'NAME_CONTRACT_TYPE',  # Identification if loan is cash or revolving,
+        'CODE_GENDER',   # Gender of the client
     ]
 
     # POS

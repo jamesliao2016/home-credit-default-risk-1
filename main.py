@@ -351,8 +351,8 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
 
 
 def split(df):
-    pos_df = df[df['TARGET'] == 1]
-    neg_df = df[df['TARGET'] == 0]
+    pos_df = df[df['TARGET'] == 1].sample(frac=1)
+    neg_df = df[df['TARGET'] == 0].sample(frac=1)
     n_pos = pos_df.shape[0]
     n_neg = neg_df.shape[0]
     n_pos_train = int(0.9*n_pos)

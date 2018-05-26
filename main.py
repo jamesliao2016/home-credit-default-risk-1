@@ -38,6 +38,17 @@ def join_pos_df(df, test_df, pos_df, features):
         df = df.merge(g, on='SK_ID_CURR', how='left')
         test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
+    # categorical
+    for f in ['NAME_CONTRACT_STATUS']:
+        g = pos_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
+        g = g.unstack(1)
+        columns = ['pos_{}_{}_count'.format(f, c) for c in g.columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
     return df, test_df, features
 
 
@@ -103,6 +114,17 @@ def join_credit_df(df, test_df, credit_df, features):
         df = df.merge(g, on='SK_ID_CURR', how='left')
         test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
+    # categorical
+    for f in ['NAME_CONTRACT_STATUS']:
+        g = credit_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
+        g = g.unstack(1)
+        columns = ['credit_{}_{}_count'.format(f, c) for c in g.columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
     return df, test_df, features
 
 
@@ -123,6 +145,20 @@ def join_prev_df(df, test_df, prev_df, features):
         else:
             raise RuntimeError('agg is invalid {}'.format(agg))
         columns = ['prev_{}_{}'.format(c, agg) for c in columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
+    # categorical
+    for f in [
+        'NAME_CONTRACT_TYPE',
+        'NAME_CONTRACT_STATUS',
+    ]:
+        g = prev_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
+        g = g.unstack(1)
+        columns = ['prev_{}_{}_count'.format(f, c) for c in g.columns]
         g.columns = columns
         features += columns
         g = g.reset_index()
@@ -150,6 +186,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     ]
     cat_feature = [
         'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa
+        'NAME_CONTRACT_TYPE',  # Identification if loan is cash or revolving,
     ]
 
     # POS

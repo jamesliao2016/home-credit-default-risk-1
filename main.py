@@ -15,6 +15,8 @@ def join_pos_df(df, test_df, pos_df, features):
         [
             'mean', [
                 'CNT_INSTALMENT_FUTURE',
+                'SK_DPD_DEF',
+                'SK_DPD',
             ],
         ],
     ]:

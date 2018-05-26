@@ -6,48 +6,56 @@ from sklearn.metrics import roc_auc_score
 pd.set_option("display.max_columns", 100)
 
 
-def join_pos_df(df, test_df, pos_df, features):
-    # TODO: recent balance
-    grp = pos_df.groupby('SK_ID_CURR')
-    for agg, columns in [
-        [
-            'count', []
-        ],
-        [
-            'mean', [
-                'CNT_INSTALMENT_FUTURE',
-                'SK_DPD_DEF',
-                'SK_DPD',
-            ],
-        ],
+def join_pos_df(df, test_df, orig_pos_df, features):
+    prefix = 'pos'
+    for recent in [
+        1,
+        12,
+        100*12,
     ]:
-        if agg == 'count':
-            g = grp[['SK_ID_PREV']].count()
-        elif agg == 'mean':
-            g = grp[columns].mean()
-        else:
-            raise RuntimeError('agg is invalid {}'.format(agg))
+        pos_df = orig_pos_df[orig_pos_df['MONTHS_BALANCE'] >= -recent]
+        grp = pos_df.groupby('SK_ID_CURR')
+        for agg, columns in [
+            [
+                'count', []
+            ],
+            [
+                'mean', [
+                    'CNT_INSTALMENT_FUTURE',
+                    'SK_DPD_DEF',
+                    'SK_DPD',
+                ],
+            ],
+        ]:
+            if agg == 'count':
+                g = grp[['SK_ID_PREV']].count()
+            elif agg == 'mean':
+                g = grp[columns].mean()
+            else:
+                raise RuntimeError('agg is invalid {}'.format(agg))
 
-        if agg == 'count':
-            columns = ['pos_COUNT']
-        else:
-            columns = ['pos_{}_{}'.format(c, agg) for c in columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+            if agg == 'count':
+                columns = ['{}_recent_{}_COUNT'.format(prefix, recent)]
+            else:
+                columns = ['{}_recent_{}_{}_{}'.format(
+                    prefix, recent, c, agg) for c in columns]
+            g.columns = columns
+            features += columns
+            g = g.reset_index()
+            df = df.merge(g, on='SK_ID_CURR', how='left')
+            test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
-    # categorical
-    for f in ['NAME_CONTRACT_STATUS']:
-        g = pos_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
-        g = g.unstack(1)
-        columns = ['pos_{}_{}_count'.format(f, c) for c in g.columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+        # categorical
+        for f in ['NAME_CONTRACT_STATUS']:
+            g = pos_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
+            g = g.unstack(1)
+            columns = ['{}_recent_{}_{}_count'.format(
+                prefix, recent, c) for c in g.columns]
+            g.columns = columns
+            features += columns
+            g = g.reset_index()
+            df = df.merge(g, on='SK_ID_CURR', how='left')
+            test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
     return df, test_df, features
 

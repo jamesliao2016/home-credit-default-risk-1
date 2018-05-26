@@ -126,6 +126,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
     bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
+    credit_df = credit_df[credit_df['SK_ID_CURR'].isin(sk_id_curr)]
     prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)]
 
     features = [

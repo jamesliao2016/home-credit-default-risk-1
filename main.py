@@ -48,6 +48,7 @@ def join_bure_df(df, test_df, bure_df, features):
             'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
             'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
+            'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
         ],
         'sum': [
             'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
@@ -55,6 +56,7 @@ def join_bure_df(df, test_df, bure_df, features):
         'max': [
             'DAYS_CREDIT',
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
+            'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
         ],
     }.items():
         if agg == 'mean':
@@ -105,11 +107,14 @@ def join_credit_df(df, test_df, credit_df, features):
 
 
 def join_prev_df(df, test_df, prev_df, features):
+    # TODO: increase annuity?
+    # TODO: recent application
     grp = prev_df.groupby('SK_ID_CURR')
     for agg, columns in [
         [
             'mean', [
                 'CNT_PAYMENT',  # Term of previous credit at application of the previous application  # noqa
+                'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
             ],
         ],
     ]:

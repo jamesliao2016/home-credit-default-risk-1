@@ -191,6 +191,7 @@ def join_prev_df(df, test_df, prev_df, features):
             'mean', [
                 'CNT_PAYMENT',  # Term of previous credit at application of the previous application  # noqa
                 'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
+                'AMT_DOWN_PAYMENT',  # Down payment on the previous application
             ],
         ],
     ]:

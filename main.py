@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import lightgbm as lgb
 from collections import defaultdict
@@ -222,6 +223,7 @@ def split(df):
 
 
 def main():
+    np.random.seed(215)
     validate = True
     train_df = pd.read_feather('./data/application_train.csv.feather')
     if validate:

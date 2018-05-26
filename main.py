@@ -136,6 +136,9 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         'AMT_GOODS_PRICE',  # For consumer loans it is the price of the goods for which the loan is given  # noqa
         'DAYS_EMPLOYED',  # How many days before the application the person started current employment,time only relative to the application  # noqa
     ]
+    cat_feature = [
+        'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa
+    ]
 
     # POS
     df, test_df, features = join_pos_df(df, test_df, pos_df, features)
@@ -149,18 +152,27 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     # prev_df
     df, test_df, features = join_prev_df(df, test_df, prev_df, features)
 
+    # cat features
+    df[cat_feature] = df[cat_feature].astype('category')
+    df[cat_feature] = df[cat_feature].apply(lambda x: x.cat.codes)
+    test_df[cat_feature] = test_df[cat_feature].astype('category')
+    test_df[cat_feature] = test_df[cat_feature].apply(lambda x: x.cat.codes)
+
     # train
     n_train = int(len(df) * 0.9)
     train_df = df[:n_train]
     valid_df = df[n_train:]
 
+    features += cat_feature
     xgtrain = lgb.Dataset(
         train_df[features].values, label=train_df['TARGET'].values,
         feature_name=features,
+        categorical_feature=cat_feature,
     )
     xgvalid = lgb.Dataset(
         valid_df[features].values, label=valid_df['TARGET'].values,
         feature_name=features,
+        categorical_feature=cat_feature,
     )
     evals_result = {}
     lgb_params = {
@@ -192,6 +204,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         num_boost_round=1000,
         early_stopping_rounds=30,
         verbose_eval=20,
+        categorical_feature=cat_feature,
         # feval=feval,
     )
 

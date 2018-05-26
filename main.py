@@ -21,9 +21,22 @@ def join_pos_df(df, test_df, orig_pos_df, features):
             ],
             [
                 'mean', [
-                    'CNT_INSTALMENT_FUTURE',
+                    'CNT_INSTALMENT',  # Term of previous credit (can change over time) # noqa
+                    'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
                     'SK_DPD_DEF',
                     'SK_DPD',
+                ],
+            ],
+            [
+                'max', [
+                    'CNT_INSTALMENT',  # Term of previous credit (can change over time) # noqa
+                    'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
+                ],
+            ],
+            [
+                'min', [
+                    'CNT_INSTALMENT',  # Term of previous credit (can change over time) # noqa
+                    'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
                 ],
             ],
         ]:
@@ -31,6 +44,10 @@ def join_pos_df(df, test_df, orig_pos_df, features):
                 g = grp[['SK_ID_PREV']].count()
             elif agg == 'mean':
                 g = grp[columns].mean()
+            elif agg == 'min':
+                g = grp[columns].min()
+            elif agg == 'max':
+                g = grp[columns].max()
             else:
                 raise RuntimeError('agg is invalid {}'.format(agg))
 

@@ -234,8 +234,8 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         'objective': 'binary',
         'metric': 'auc',
         'learning_rate': 0.1,
-        'num_leaves': (2**5)-1,  # 2^max_depth - 1
-        'max_depth': 5,  # -1 means no limit
+        'num_leaves': 2**6,
+        'max_depth': 6,  # -1 means no limit
         'min_child_samples': 100,
         'max_bin': 100,
         'subsample': 0.7,

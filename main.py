@@ -60,14 +60,17 @@ def join_bure_df(df, test_df, bure_df, features):
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
             'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
             'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
+            'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
         ],
         'sum': [
             'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
+            'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
         ],
         'max': [
             'DAYS_CREDIT',
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
             'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
+            'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
         ],
     }.items():
         if agg == 'mean':

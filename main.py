@@ -1,6 +1,8 @@
+import os
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
+from datetime import datetime
 from collections import defaultdict
 from sklearn.metrics import roc_auc_score
 pd.set_option("display.max_columns", 100)
@@ -364,11 +366,16 @@ def split(df):
 
 def main():
     np.random.seed(215)
+    now = datetime.now().strftime('%m%d-%H%M')
     validate = True
     train_df = pd.read_feather('./data/application_train.csv.feather')
     if validate:
         n_bagging = 5
         train_df, test_df = split(train_df)
+    else:
+        n_bagging = 5
+        test_df = pd.read_feather('./data/application_test.csv.feather')
+
     pos_train_df = train_df[train_df['TARGET'] == 1]
     neg_train_df = train_df[train_df['TARGET'] == 0]
     n_pos = pos_train_df.shape[0]
@@ -396,6 +403,12 @@ def main():
     if validate:
         print('validate auc: {}'.format(
             roc_auc_score(test_df['TARGET'], test_df['PRED'])))
+    else:
+        test_df['TARGET'] = test_df['PRED']
+        test_df = test_df[['SK_ID_CURR', 'TARGET']]
+        os.makedirs('./output', exist_ok=True)
+        path = os.path.join('./output', '{}.csv.gz'.format(now))
+        test_df.to_csv(path, index=False, compression='gzip')
 
 
 if __name__ == '__main__':

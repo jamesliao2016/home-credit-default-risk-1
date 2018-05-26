@@ -230,6 +230,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
         'AMT_GOODS_PRICE',  # For consumer loans it is the price of the goods for which the loan is given  # noqa
         'DAYS_EMPLOYED',  # How many days before the application the person started current employment,time only relative to the application  # noqa
         'DAYS_ID_PUBLISH',   # How many days before the application did client change the identity document with which he applied for the loan,time only relative to the application # noqa
+        'OWN_CAR_AGE',  # Age of client's car,
     ]
     cat_feature = [
         'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa

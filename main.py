@@ -148,6 +148,7 @@ def join_bure_df(df, test_df, bure_df, features):
     # categorical
     for f in [
         'CREDIT_ACTIVE',  # Status of the Credit Bureau (CB) reported credits
+        'CREDIT_CURRENCY',  # Recoded currency of the Credit Bureau credit,recoded # noqa
     ]:
         g = bure_df.groupby(['SK_ID_CURR', f])['SK_ID_BUREAU'].count()
         g = g.unstack(1)

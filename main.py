@@ -5,23 +5,37 @@ from sklearn.metrics import roc_auc_score
 pd.set_option("display.max_columns", 100)
 
 
-def join_pos_df(df, pos_df):
+def join_pos_df(df, test_df, pos_df, features):
     # TODO: recent balance
     grp = pos_df.groupby('SK_ID_CURR')
+    for agg, columns in [
+        [
+            'count', []
+        ],
+        [
+            'mean', [
+                'CNT_INSTALMENT_FUTURE',
+            ],
+        ],
+    ]:
+        if agg == 'count':
+            g = grp[['SK_ID_PREV']].count()
+        elif agg == 'mean':
+            g = grp[columns].mean()
+        else:
+            raise RuntimeError('agg is invalid {}'.format(agg))
 
-    # count
-    g = grp[['SK_ID_PREV']].count()
-    g.columns = ['POS_COUNT']
-    df = df.merge(g.reset_index(), on='SK_ID_CURR', how='left')
+        if agg == 'count':
+            columns = ['pos_COUNT']
+        else:
+            columns = ['pos_{}_{}'.format(c, agg) for c in columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
-    # agg
-    columns = ['CNT_INSTALMENT_FUTURE']
-    grp = grp[columns].mean()
-    grp.columns = ['{}_mean'.format(c) for c in columns]
-    grp = grp.reset_index()
-    df = df.merge(grp, on='SK_ID_CURR', how='left')
-
-    return df
+    return df, test_df, features
 
 
 def join_bure_df(df, test_df, bure_df, features):
@@ -121,11 +135,7 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     ]
 
     # POS
-    df = join_pos_df(df, pos_df)
-    features += [
-        'POS_COUNT',
-        'CNT_INSTALMENT_FUTURE_mean',
-    ]
+    df, test_df, features = join_pos_df(df, test_df, pos_df, features)
 
     # credit bureau
     df, test_df, features = join_bure_df(df, test_df, bure_df, features)
@@ -192,7 +202,6 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     for key, value in zip(feature_name, importance):
         importance_summay[key] += value / sum(importance)
 
-    test_df = join_pos_df(test_df, pos_df)
     return bst.predict(test_df[features], bst.best_iteration)
 
 

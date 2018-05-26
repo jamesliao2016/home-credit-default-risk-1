@@ -89,6 +89,7 @@ def join_bure_df(df, test_df, bure_df, features):
             'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
             'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
             'DAYS_ENDDATE_FACT',  # Days since CB credit ended at the time of application in Home Credit (only for closed credit),time only relative to the application # noqa
+            'DAYS_CREDIT_UPDATE',  # How many days before loan application did last information about the Credit Bureau credit come,time only relative to the application # noqa
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
             'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
             'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
@@ -102,6 +103,7 @@ def join_bure_df(df, test_df, bure_df, features):
             'DAYS_CREDIT',
             'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
             'DAYS_ENDDATE_FACT',  # Days since CB credit ended at the time of application in Home Credit (only for closed credit),time only relative to the application # noqa
+            'DAYS_CREDIT_UPDATE',  # How many days before loan application did last information about the Credit Bureau credit come,time only relative to the application # noqa
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
             'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
             'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
@@ -110,6 +112,7 @@ def join_bure_df(df, test_df, bure_df, features):
             'DAYS_CREDIT',
             'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
             'DAYS_ENDDATE_FACT',  # Days since CB credit ended at the time of application in Home Credit (only for closed credit),time only relative to the application # noqa
+            'DAYS_CREDIT_UPDATE',  # How many days before loan application did last information about the Credit Bureau credit come,time only relative to the application # noqa
             'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
             'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
             'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa

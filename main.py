@@ -245,7 +245,10 @@ def join_prev_df(df, test_df, prev_df, features):
     return df, test_df, features
 
 
-def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
+def train(
+    df, test_df, pos_df, bure_df, credit_df, prev_df, validate,
+    importance_summay,
+):
     # filter by sample id
     sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
@@ -373,9 +376,14 @@ def train(df, test_df, pos_df, bure_df, credit_df, prev_df, importance_summay):
     df = df[:n_train].reset_index(drop=True)
 
     # train
-    n_train = int(len(df) * 0.9)
-    train_df = df[:n_train]
-    valid_df = df[n_train:]
+    if validate:
+        n_train = len(df)
+        train_df = df
+        valid_df = test_df
+    else:
+        n_train = int(len(df) * 0.9)
+        train_df = df[:n_train]
+        valid_df = df[n_train:]
 
     features += cat_feature
     xgtrain = lgb.Dataset(
@@ -440,8 +448,8 @@ def split(df):
     neg_df = df[df['TARGET'] == 0].sample(frac=1)
     n_pos = pos_df.shape[0]
     n_neg = neg_df.shape[0]
-    n_pos_train = int(0.7*n_pos)
-    n_neg_train = int(0.7*n_neg)
+    n_pos_train = int(0.85*n_pos)
+    n_neg_train = int(0.85*n_neg)
     train_df = pd.concat([pos_df[:n_pos_train], neg_df[:n_neg_train]])
     train_df = train_df.sample(frac=1).reset_index()
     test_df = pd.concat([pos_df[n_pos_train:], neg_df[n_neg_train:]])
@@ -452,44 +460,61 @@ def split(df):
 def main():
     np.random.seed(215)
     now = datetime.now().strftime('%m%d-%H%M')
-    validate = True
-    train_df = pd.read_feather('./data/application_train.csv.feather')
-    if validate:
-        n_bagging = 5
-        train_df, test_df = split(train_df)
-    else:
-        n_bagging = 5
-        test_df = pd.read_feather('./data/application_test.csv.feather')
-
-    pos_train_df = train_df[train_df['TARGET'] == 1]
-    neg_train_df = train_df[train_df['TARGET'] == 0]
-    n_pos = pos_train_df.shape[0]
-    importance_summay = defaultdict(lambda: 0)
+    validate = False
+    print('validate: {}'.format(validate))
+    print('load data...')
+    df = pd.read_feather('./data/application_train.csv.feather')
+    print('n_train: {}'.format(len(df)))
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
     bure_df = pd.read_feather('./data/bureau.csv.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
     prev_df = pd.read_feather('./data/previous_application.csv.feather')
+
+    if validate:
+        n_bagging = 5
+    else:
+        n_bagging = 5
+        test_df = pd.read_feather('./data/application_test.csv.feather')
+        print('n_test: {}'.format(len(test_df)))
+
+    importance_summay = defaultdict(lambda: 0)
+    auc_summary = []
+
     for i in range(n_bagging):
+        if validate:
+            train_df, test_df = split(df)
+        else:
+            train_df = df
+        pos_train_df = train_df[train_df['TARGET'] == 1]
+        neg_train_df = train_df[train_df['TARGET'] == 0]
+        n_pos = len(pos_train_df)
+        print('n_pos: {}'.format(n_pos))
         neg_part_train_df = neg_train_df.sample(n=n_pos)
         part_df = pd.concat([pos_train_df, neg_part_train_df])
         part_df = part_df.sample(frac=1)
+
         test_df['PRED_{}'.format(i)] = train(
             part_df, test_df, pos_df, bure_df, credit_df, prev_df,
-            importance_summay)
+            validate, importance_summay,
+        )
+        if validate:
+            auc_summary.append(roc_auc_score(
+                test_df['TARGET'], test_df['PRED_{}'.format(i)]
+            ))
+
+    auc_summary = np.array(auc_summary)
 
     for key, value in sorted(importance_summay.items(), key=lambda x: -x[1]):
         print('{} {}'.format(key, value))
 
-    test_df['PRED'] = 0
-    for i in range(n_bagging):
-        test_df['PRED'] += test_df['PRED_{}'.format(i)]
-    test_df['PRED'] /= test_df['PRED'].max()
-
     if validate:
-        print('validate auc: {}'.format(
-            roc_auc_score(test_df['TARGET'], test_df['PRED'])))
+        print('validate auc: {} +- {}'.format(
+            auc_summary.mean(), auc_summary.std()))
     else:
-        test_df['TARGET'] = test_df['PRED']
+        test_df['TARGET'] = 0
+        for i in range(n_bagging):
+            test_df['TARGET'] += test_df['PRED_{}'.format(i)]
+        test_df['TARGET'] /= test_df['TARGET'].max()
         test_df = test_df[['SK_ID_CURR', 'TARGET']]
         os.makedirs('./output', exist_ok=True)
         path = os.path.join('./output', '{}.csv.gz'.format(now))

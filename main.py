@@ -233,6 +233,27 @@ def join_credit_df(df, test_df, credit_df, features):
 def join_prev_df(df, test_df, prev_df, features):
     # TODO: increase annuity?
     # TODO: recent application
+    mapping = {
+        'POS mobile with interest': 'POS',
+        'POS household without interest': 'POS',
+        'POS household with interest': 'POS',
+        'POS other with interest': 'POS',
+        'POS mobile without interest': 'POS',
+        'POS industry with interest': 'POS',
+        'POS industry without interest': 'POS',
+        'POS others without interest': 'POS',
+        'Cash X-Sell: low': 'Cash',
+        'Cash X-Sell: high': 'Cash',
+        'Cash X-Sell: middle': 'Cash',
+        'Cash Street: high': 'Cash',
+        'Cash Street: middle'
+        'Cash Street: low': 'Cash',
+        'Cash': 'Cash',
+        'Card Street': 'Card',
+        'Card X-Sell': 'Card',
+    }
+    prev_df['PRODUCT_COMBINATION_PREFIX'] = prev_df[
+        'PRODUCT_COMBINATION'].map(mapping)
     grp = prev_df.groupby('SK_ID_CURR')
     for agg, columns in [
         [
@@ -311,6 +332,7 @@ def join_prev_df(df, test_df, prev_df, features):
         # 'NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
         # 'PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa
         # 'NFLAG_INSURED_ON_APPROVAL',  # Did the client requested insurance during the previous application, # noqa
+        'PRODUCT_COMBINATION_PREFIX',
     ]:
         g = prev_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
         g = g.unstack(1)

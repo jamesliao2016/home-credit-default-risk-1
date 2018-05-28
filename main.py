@@ -5,7 +5,26 @@ import lightgbm as lgb
 from datetime import datetime
 from collections import defaultdict
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import KFold
 pd.set_option("display.max_columns", 100)
+
+
+def encode_prev_df(df, prev_df):
+    sk_id_curr = df['SK_ID_CURR'].unique()
+    np.random.shuffle(sk_id_curr)
+    print(sk_id_curr)
+    join_df = df[['SK_ID_CURR', 'TARGET']].merge(
+        prev_df[['SK_ID_CURR', 'SELLERPLACE_AREA']],
+        on='SK_ID_CURR', how='left')
+    kf = KFold(20)
+    for train_idx, val_idx in kf.split(sk_id_curr):
+        train_id, val_id = sk_id_curr[train_idx], sk_id_curr[val_idx]
+        train_df = join_df[join_df['SK_ID_CURR'].isin(train_id)]
+        grp = train_df.groupby(
+            'SELLERPLACE_AREA')['TARGET'].mean()
+        idx = prev_df[prev_df['SK_ID_CURR'].isin(val_id)].index
+        prev_df.loc[idx, 'ENCODED_SELLERPLACE_AREA'] = prev_df.loc[
+            idx, 'SELLERPLACE_AREA'].map(grp)
 
 
 def join_pos_df(df, test_df, orig_pos_df, features):
@@ -252,6 +271,7 @@ def join_prev_df(df, test_df, prev_df, features):
                 'DAYS_LAST_DUE_1ST_VERSION',  # Relative to application date of current application when was the first due of the previous application,time only relative to the application # noqa
                 'DAYS_LAST_DUE',  # Relative to application date of current application when was the last due date of the previous application,time only relative to the application # noqa
                 'DAYS_TERMINATION',  # Relative to application date of current application when was the expected termination of the previous application,time only relative to the application # noqa
+                # 'ENCODED_SELLERPLACE_AREA', TODO: fix me
             ],
         ],
     ]:
@@ -284,7 +304,7 @@ def join_prev_df(df, test_df, prev_df, features):
         'NAME_PORTFOLIO',  # "Was the previous application for CASH, POS, CAR, <85>", # noqa
         'NAME_PRODUCT_TYPE',  # Was the previous application x-sell o walk-in, # noqa
         'CHANNEL_TYPE',  # Through which channel we acquired the client on the previous application, # noqa
-        'SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # noqa
+        # 'SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
         'NAME_SELLER_INDUSTRY',  # The industry of the seller, # noqa
         'NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
         'PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa
@@ -358,6 +378,7 @@ def train(
     credit_df = credit_df[credit_df['SK_ID_CURR'].isin(sk_id_curr)]
     prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)]
     inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)]
+    encode_prev_df(df, prev_df)
 
     bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
     sk_id_bure = bure_df['SK_ID_BUREAU'].unique()

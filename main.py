@@ -11,9 +11,10 @@ pd.set_option("display.max_columns", 100)
 def join_pos_df(df, test_df, orig_pos_df, features):
     prefix = 'pos'
     for recent in [
+        0,
         1,
         12,
-        100*12,
+        10*12,
     ]:
         pos_df = orig_pos_df[orig_pos_df['MONTHS_BALANCE'] >= -recent]
         grp = pos_df.groupby('SK_ID_CURR')

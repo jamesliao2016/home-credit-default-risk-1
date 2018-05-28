@@ -3,7 +3,37 @@ from category_encoders.target_encoder import TargetEncoder
 
 
 def encode_train(train_df, test_df):
-    cols = ['CODE_GENDER', 'FLAG_OWN_CAR']
+    cols = [
+        'CODE_GENDER',
+        'FLAG_OWN_CAR',
+        'FLAG_OWN_REALTY',
+        'NAME_TYPE_SUITE',
+        'NAME_INCOME_TYPE',
+        'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa
+        'NAME_FAMILY_STATUS',
+        'NAME_HOUSING_TYPE',
+        'FLAG_MOBIL',
+        'FLAG_EMP_PHONE',
+        'FLAG_WORK_PHONE',
+        'FLAG_CONT_MOBILE',
+        'FLAG_PHONE',
+        'FLAG_EMAIL',
+        'OCCUPATION_TYPE',
+        'WEEKDAY_APPR_PROCESS_START',
+        'HOUR_APPR_PROCESS_START',
+        'REG_REGION_NOT_LIVE_REGION',
+        'REG_REGION_NOT_WORK_REGION',
+        'LIVE_REGION_NOT_WORK_REGION',
+        'REG_CITY_NOT_LIVE_CITY',
+        'REG_CITY_NOT_WORK_CITY',
+        'LIVE_CITY_NOT_WORK_CITY',
+        'ORGANIZATION_TYPE',
+        'FONDKAPREMONT_MODE',
+        'HOUSETYPE_MODE',
+        'WALLSMATERIAL_MODE',
+        'EMERGENCYSTATE_MODE',
+        'NAME_CONTRACT_TYPE',  # Identification if loan is cash or revolving,
+    ]
     encoder = TargetEncoder(cols=cols)
     encoder.fit(train_df[cols], train_df['TARGET'])
     encoded_train_df = encoder.transform(train_df[cols])

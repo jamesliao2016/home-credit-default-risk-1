@@ -433,38 +433,65 @@ def train(
         # encoded
         'ENCODED_CODE_GENDER',
         'ENCODED_FLAG_OWN_CAR',
+        'ENCODED_FLAG_OWN_REALTY',
+        'ENCODED_NAME_TYPE_SUITE',
+        'ENCODED_NAME_INCOME_TYPE',
+        'ENCODED_NAME_EDUCATION_TYPE',
+        'ENCODED_NAME_FAMILY_STATUS',
+        'ENCODED_NAME_HOUSING_TYPE',
+        'ENCODED_FLAG_MOBIL',
+        'ENCODED_FLAG_EMP_PHONE',
+        'ENCODED_FLAG_WORK_PHONE',
+        'ENCODED_FLAG_CONT_MOBILE',
+        'ENCODED_FLAG_PHONE',
+        'ENCODED_FLAG_EMAIL',
+        'ENCODED_OCCUPATION_TYPE',
+        'ENCODED_WEEKDAY_APPR_PROCESS_START',
+        'ENCODED_HOUR_APPR_PROCESS_START',
+        'ENCODED_REG_REGION_NOT_LIVE_REGION',
+        'ENCODED_REG_REGION_NOT_WORK_REGION',
+        'ENCODED_LIVE_REGION_NOT_WORK_REGION',
+        'ENCODED_REG_CITY_NOT_LIVE_CITY',
+        'ENCODED_REG_CITY_NOT_WORK_CITY',
+        'ENCODED_LIVE_CITY_NOT_WORK_CITY',
+        'ENCODED_ORGANIZATION_TYPE',
+        'ENCODED_FONDKAPREMONT_MODE',
+        'ENCODED_HOUSETYPE_MODE',
+        'ENCODED_WALLSMATERIAL_MODE',
+        'ENCODED_EMERGENCYSTATE_MODE',
+        'ENCODED_NAME_CONTRACT_TYPE',
     ]
 
     cat_feature = [
-        'CODE_GENDER',   # Gender of the client
-        'FLAG_OWN_CAR',
-        'FLAG_OWN_REALTY',
-        'NAME_TYPE_SUITE',
-        'NAME_INCOME_TYPE',
-        'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa
-        'NAME_FAMILY_STATUS',
-        'NAME_HOUSING_TYPE',
-        'FLAG_MOBIL',
-        'FLAG_EMP_PHONE',
-        'FLAG_WORK_PHONE',
-        'FLAG_CONT_MOBILE',
-        'FLAG_PHONE',
-        'FLAG_EMAIL',
-        'OCCUPATION_TYPE',
-        'WEEKDAY_APPR_PROCESS_START',
-        'HOUR_APPR_PROCESS_START',
-        'REG_REGION_NOT_LIVE_REGION',
-        'REG_REGION_NOT_WORK_REGION',
-        'LIVE_REGION_NOT_WORK_REGION',
-        'REG_CITY_NOT_LIVE_CITY',
-        'REG_CITY_NOT_WORK_CITY',
-        'LIVE_CITY_NOT_WORK_CITY',
-        # 'ORGANIZATION_TYPE',
-        'FONDKAPREMONT_MODE',
-        'HOUSETYPE_MODE',
-        'WALLSMATERIAL_MODE',
-        'EMERGENCYSTATE_MODE',
-        'NAME_CONTRACT_TYPE',  # Identification if loan is cash or revolving,
+        # 'CODE_GENDER',   # Gender of the client
+        # 'FLAG_OWN_CAR',
+        # 'FLAG_OWN_REALTY',
+        # 'NAME_TYPE_SUITE',
+        # 'NAME_INCOME_TYPE',
+        # 'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa
+        # 'NAME_FAMILY_STATUS',
+        # 'NAME_HOUSING_TYPE',
+        # 'FLAG_MOBIL',
+        # 'FLAG_EMP_PHONE',
+        # 'FLAG_WORK_PHONE',
+        # 'FLAG_CONT_MOBILE',
+        # 'FLAG_PHONE',
+        # 'FLAG_EMAIL',
+        # 'OCCUPATION_TYPE',
+        # 'WEEKDAY_APPR_PROCESS_START',
+        # 'HOUR_APPR_PROCESS_START',
+        # 'REG_REGION_NOT_LIVE_REGION',
+        # 'REG_REGION_NOT_WORK_REGION',
+        # 'LIVE_REGION_NOT_WORK_REGION',
+        # 'REG_CITY_NOT_LIVE_CITY',
+        # 'REG_CITY_NOT_WORK_CITY',
+        # 'LIVE_CITY_NOT_WORK_CITY',
+        # # 'ORGANIZATION_TYPE',
+        # 'FONDKAPREMONT_MODE',
+        # 'HOUSETYPE_MODE',
+        # 'WALLSMATERIAL_MODE',
+        # 'EMERGENCYSTATE_MODE',
+        # 'NAME_CONTRACT_TYPE',  # Identification if loan is cash or revolving,
     ]
 
     # POS
@@ -484,13 +511,14 @@ def train(
     df, test_df, features = join_inst_df(df, test_df, inst_df, features)
 
     # cat features
-    n_train = len(df)
-    df = pd.concat([df, test_df]).reset_index(drop=True)
-    df[cat_feature] = df[cat_feature].fillna('NaN')
-    df[cat_feature] = df[cat_feature].astype('category')
-    df[cat_feature] = df[cat_feature].apply(lambda x: x.cat.codes)
-    test_df = df[n_train:].reset_index(drop=True)
-    df = df[:n_train].reset_index(drop=True)
+    if len(cat_feature) > 0:
+        n_train = len(df)
+        df = pd.concat([df, test_df]).reset_index(drop=True)
+        df[cat_feature] = df[cat_feature].fillna('NaN')
+        df[cat_feature] = df[cat_feature].astype('category')
+        df[cat_feature] = df[cat_feature].apply(lambda x: x.cat.codes)
+        test_df = df[n_train:].reset_index(drop=True)
+        df = df[:n_train].reset_index(drop=True)
 
     # train
     if validate:

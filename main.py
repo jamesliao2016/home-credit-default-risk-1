@@ -303,7 +303,9 @@ def train(
     inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)]
 
     features = [
-        'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
+        'EXT_SOURCE_1',
+        'EXT_SOURCE_2',
+        'EXT_SOURCE_3',
         'CNT_CHILDREN',
         'AMT_INCOME_TOTAL',
         'AMT_CREDIT',

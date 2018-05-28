@@ -83,22 +83,30 @@ def join_pos_df(df, test_df, orig_pos_df, features):
     return df, test_df, features
 
 
-def join_bure_df(df, test_df, bure_df, bbal_df, features):
+def join_bure_df(df, test_df, bure_df, orig_bbal_df, features):
     # balance
     bbal_features = []
-    g = bbal_df.groupby(['SK_ID_BUREAU'])[['MONTHS_BALANCE']].count()
-    columns = ['bbal_count']
-    g.columns = columns
-    bbal_features += columns
-    bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
+    for recent in [
+        0,
+        1,
+        12,
+        12*10,
+    ]:
+        bbal_df = orig_bbal_df[orig_bbal_df['MONTHS_BALANCE'] >= -recent]
+        g = bbal_df.groupby(['SK_ID_BUREAU'])[['MONTHS_BALANCE']].count()
+        columns = ['recent_{}_bbal_count'.format(recent)]
+        g.columns = columns
+        bbal_features += columns
+        bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
 
-    g = bbal_df.groupby(['SK_ID_BUREAU', 'STATUS'])['MONTHS_BALANCE'].count()
-    g = g.unstack(1)
-    columns = ['bbal_STATUS_{}_count'.format(c) for c in g.columns]
-    g.columns = columns
-    bbal_features += columns
-    bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
-    print(bure_df.head())
+        g = bbal_df.groupby(
+            ['SK_ID_BUREAU', 'STATUS'])['MONTHS_BALANCE'].count()
+        g = g.unstack(1)
+        columns = ['recent_{}_bbal_STATUS_{}_count'.format(
+            recent, c) for c in g.columns]
+        g.columns = columns
+        bbal_features += columns
+        bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
 
     # bureau
     grp = bure_df.groupby('SK_ID_CURR')

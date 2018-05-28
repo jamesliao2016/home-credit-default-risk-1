@@ -430,7 +430,7 @@ def train(
         train_df = df
         valid_df = test_df
     else:
-        n_train = int(len(df) * 0.9)
+        n_train = int(len(df) * 0.85)
         train_df = df[:n_train]
         valid_df = df[n_train:]
 

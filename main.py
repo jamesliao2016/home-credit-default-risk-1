@@ -430,6 +430,9 @@ def train(
         'DEF_60_CNT_SOCIAL_CIRCLE',
         'DAYS_LAST_PHONE_CHANGE',
         'OWN_CAR_AGE',  # Age of client's car,
+        # encoded
+        'ENCODED_CODE_GENDER',
+        'ENCODED_FLAG_OWN_CAR',
     ]
 
     cat_feature = [
@@ -577,7 +580,7 @@ def main():
     validate = True
     print('validate: {}'.format(validate))
     print('load data...')
-    df = pd.read_feather('./data/application_train.csv.feather')
+    df = pd.read_feather('./data/application_train.csv.encoded.feather')
     print('n_train: {}'.format(len(df)))
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
@@ -593,7 +596,8 @@ def main():
         n_bagging = 5
     else:
         n_bagging = 5
-        test_df = pd.read_feather('./data/application_test.csv.feather')
+        test_df = pd.read_feather(
+            './data/application_test.csv.encoded.feather')
         print('n_test: {}'.format(len(test_df)))
 
     importance_summay = defaultdict(lambda: 0)

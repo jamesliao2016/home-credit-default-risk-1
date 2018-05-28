@@ -350,7 +350,47 @@ def join_inst_df(df, test_df, inst_df, features):
     grp = inst_df.groupby('SK_ID_CURR')
     for agg, columns in [
         [
+            'count', [],
+        ],
+        [
             'mean', [
+                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
+                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
+                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
+                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
+                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
+                'ENCODED_NUM_INSTALMENT_VERSION',
+            ],
+        ],
+        [
+            'sum', [
+                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
+                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
+                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
+                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
+                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
+            ],
+        ],
+        [
+            'min', [
+                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
+                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
+                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
+                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
+                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
+            ],
+        ],
+        [
+            'max', [
+                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
+                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
+                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
+                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
+                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
+            ],
+        ],
+        [
+            'std', [
                 'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
                 'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
                 'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
@@ -364,13 +404,26 @@ def join_inst_df(df, test_df, inst_df, features):
             ],
         ],
     ]:
-        if agg == 'mean':
+        if agg == 'count':
+            g = grp[['SK_ID_PREV']].count()
+        elif agg == 'mean':
             g = grp[columns].mean()
+        elif agg == 'sum':
+            g = grp[columns].sum()
+        elif agg == 'min':
+            g = grp[columns].min()
+        elif agg == 'max':
+            g = grp[columns].min()
+        elif agg == 'std':
+            g = grp[columns].min()
         elif agg == 'nunique':
             g = grp[columns].nunique()
         else:
             raise RuntimeError('agg is invalid {}'.format(agg))
-        columns = ['inst_{}_{}'.format(c, agg) for c in columns]
+        if agg == 'count':
+            columns = ['inst_COUNT']
+        else:
+            columns = ['inst_{}_{}'.format(c, agg) for c in columns]
         g.columns = columns
         features += columns
         g = g.reset_index()
@@ -657,7 +710,8 @@ def main():
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
     prev_df = pd.read_feather(
         './data/previous_application.csv.encoded.feather')
-    inst_df = pd.read_feather('./data/installments_payments.csv.encoded.feather')
+    inst_df = pd.read_feather(
+        './data/installments_payments.csv.encoded.feather')
 
     # bureau
     bure_df = pd.read_feather('./data/bureau.csv.feather')

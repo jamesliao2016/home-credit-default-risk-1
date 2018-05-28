@@ -245,8 +245,53 @@ def join_prev_df(df, test_df, prev_df, features):
     return df, test_df, features
 
 
+def join_inst_df(df, test_df, inst_df, features):
+    grp = inst_df.groupby('SK_ID_CURR')
+    for agg, columns in [
+        [
+            'mean', [
+                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
+                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
+                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
+                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
+                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
+            ],
+        ],
+        [
+            'nunique', [
+                'NUM_INSTALMENT_VERSION',  # Version of installment calendar (0 is for credit card) of previous credit. Change of installment version from month to month signifies that some parameter of payment calendar has changed,  # noqa
+            ],
+        ],
+    ]:
+        if agg == 'mean':
+            g = grp[columns].mean()
+        elif agg == 'nunique':
+            g = grp[columns].nunique()
+        else:
+            raise RuntimeError('agg is invalid {}'.format(agg))
+        columns = ['inst_{}_{}'.format(c, agg) for c in columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
+    # categorical
+    for f in []:
+        g = inst_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
+        g = g.unstack(1)
+        columns = ['prev_{}_{}_count'.format(f, c) for c in g.columns]
+        g.columns = columns
+        features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
+    return df, test_df, features
+
+
 def train(
-    df, test_df, pos_df, bure_df, credit_df, prev_df, validate,
+    df, test_df, pos_df, bure_df, credit_df, prev_df, inst_df, validate,
     importance_summay,
 ):
     # filter by sample id
@@ -255,6 +300,7 @@ def train(
     bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
     credit_df = credit_df[credit_df['SK_ID_CURR'].isin(sk_id_curr)]
     prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)]
+    inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)]
 
     features = [
         'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
@@ -366,6 +412,9 @@ def train(
     # prev_df
     df, test_df, features = join_prev_df(df, test_df, prev_df, features)
 
+    # inst_df
+    df, test_df, features = join_inst_df(df, test_df, inst_df, features)
+
     # cat features
     n_train = len(df)
     df = pd.concat([df, test_df]).reset_index(drop=True)
@@ -460,7 +509,7 @@ def split(df):
 def main():
     np.random.seed(215)
     now = datetime.now().strftime('%m%d-%H%M')
-    validate = False
+    validate = True
     print('validate: {}'.format(validate))
     print('load data...')
     df = pd.read_feather('./data/application_train.csv.feather')
@@ -469,6 +518,7 @@ def main():
     bure_df = pd.read_feather('./data/bureau.csv.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
     prev_df = pd.read_feather('./data/previous_application.csv.feather')
+    inst_df = pd.read_feather('./data/installments_payments.csv.feather')
 
     if validate:
         n_bagging = 5
@@ -494,7 +544,7 @@ def main():
         part_df = part_df.sample(frac=1)
 
         test_df['PRED_{}'.format(i)] = train(
-            part_df, test_df, pos_df, bure_df, credit_df, prev_df,
+            part_df, test_df, pos_df, bure_df, credit_df, prev_df, inst_df,
             validate, importance_summay,
         )
         if validate:

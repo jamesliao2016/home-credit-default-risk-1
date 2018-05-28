@@ -83,7 +83,17 @@ def join_pos_df(df, test_df, orig_pos_df, features):
     return df, test_df, features
 
 
-def join_bure_df(df, test_df, bure_df, features):
+def join_bure_df(df, test_df, bure_df, bbal_df, features):
+    # balance
+    g = bbal_df.groupby(['SK_ID_BUREAU', 'STATUS'])['MONTHS_BALANCE'].count()
+    g = g.unstack(1)
+    columns = ['bbal_STATUS_{}_count'.format(c) for c in g.columns]
+    g.columns = columns
+    bbal_features = columns
+    bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
+    print(bure_df.head())
+
+    # bureau
     grp = bure_df.groupby('SK_ID_CURR')
     for agg, columns in {
         'count': [],
@@ -101,7 +111,7 @@ def join_bure_df(df, test_df, bure_df, features):
         'sum': [
             'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
             'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
-        ],
+        ] + bbal_features,
         'max': [
             'DAYS_CREDIT',
             'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
@@ -291,16 +301,20 @@ def join_inst_df(df, test_df, inst_df, features):
 
 
 def train(
-    df, test_df, pos_df, bure_df, credit_df, prev_df, inst_df, validate,
-    importance_summay,
+    df, test_df, pos_df, credit_df, prev_df, inst_df,
+    bure_df, bbal_df,
+    validate, importance_summay,
 ):
     # filter by sample id
     sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
-    bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
     credit_df = credit_df[credit_df['SK_ID_CURR'].isin(sk_id_curr)]
     prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)]
     inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)]
+
+    bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
+    sk_id_bure = bure_df['SK_ID_BUREAU'].unique()
+    bbal_df = bbal_df[bbal_df['SK_ID_BUREAU'].isin(sk_id_bure)]
 
     features = [
         'EXT_SOURCE_1',
@@ -406,7 +420,8 @@ def train(
     df, test_df, features = join_pos_df(df, test_df, pos_df, features)
 
     # credit bureau
-    df, test_df, features = join_bure_df(df, test_df, bure_df, features)
+    df, test_df, features = join_bure_df(
+        df, test_df, bure_df, bbal_df, features)
 
     # credit card
     df, test_df, features = join_credit_df(df, test_df, credit_df, features)
@@ -517,10 +532,13 @@ def main():
     df = pd.read_feather('./data/application_train.csv.feather')
     print('n_train: {}'.format(len(df)))
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
-    bure_df = pd.read_feather('./data/bureau.csv.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
     prev_df = pd.read_feather('./data/previous_application.csv.feather')
     inst_df = pd.read_feather('./data/installments_payments.csv.feather')
+
+    # bureau
+    bure_df = pd.read_feather('./data/bureau.csv.feather')
+    bbal_df = pd.read_feather('./data/bureau_balance.csv.feather')
 
     if validate:
         n_bagging = 5
@@ -546,7 +564,8 @@ def main():
         part_df = part_df.sample(frac=1)
 
         test_df['PRED_{}'.format(i)] = train(
-            part_df, test_df, pos_df, bure_df, credit_df, prev_df, inst_df,
+            part_df, test_df, pos_df, credit_df, prev_df, inst_df,
+            bure_df, bbal_df,
             validate, importance_summay,
         )
         if validate:

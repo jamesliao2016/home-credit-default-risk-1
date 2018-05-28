@@ -85,11 +85,18 @@ def join_pos_df(df, test_df, orig_pos_df, features):
 
 def join_bure_df(df, test_df, bure_df, bbal_df, features):
     # balance
+    bbal_features = []
+    g = bbal_df.groupby(['SK_ID_BUREAU'])[['MONTHS_BALANCE']].count()
+    columns = ['bbal_count']
+    g.columns = columns
+    bbal_features += columns
+    bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
+
     g = bbal_df.groupby(['SK_ID_BUREAU', 'STATUS'])['MONTHS_BALANCE'].count()
     g = g.unstack(1)
     columns = ['bbal_STATUS_{}_count'.format(c) for c in g.columns]
     g.columns = columns
-    bbal_features = columns
+    bbal_features += columns
     bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
     print(bure_df.head())
 

@@ -450,8 +450,8 @@ def train(
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': 'auc',
-        'learning_rate': 0.1,
-        'num_leaves': 64,
+        'learning_rate': 0.05,
+        'num_leaves': 15,
         'max_depth': -1,  # -1 means no limit
         'min_data_in_leaf': 40,
         'max_bin': 64,
@@ -472,9 +472,9 @@ def train(
         valid_sets=[xgtrain, xgvalid],
         valid_names=['train', 'valid'],
         evals_result=evals_result,
-        num_boost_round=1000,
-        early_stopping_rounds=50,
-        verbose_eval=20,
+        num_boost_round=2000,
+        early_stopping_rounds=100,
+        verbose_eval=50,
         categorical_feature=cat_feature,
         # feval=feval,
     )

@@ -392,7 +392,7 @@ def train(
         'REG_CITY_NOT_LIVE_CITY',
         'REG_CITY_NOT_WORK_CITY',
         'LIVE_CITY_NOT_WORK_CITY',
-        'ORGANIZATION_TYPE',
+        # 'ORGANIZATION_TYPE',
         'FONDKAPREMONT_MODE',
         'HOUSETYPE_MODE',
         'WALLSMATERIAL_MODE',

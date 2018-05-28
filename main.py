@@ -657,7 +657,7 @@ def main():
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
     prev_df = pd.read_feather(
         './data/previous_application.csv.encoded.feather')
-    inst_df = pd.read_feather('./data/installments_payments.csv.feather')
+    inst_df = pd.read_feather('./data/installments_payments.csv.encoded.feather')
 
     # bureau
     bure_df = pd.read_feather('./data/bureau.csv.feather')

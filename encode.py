@@ -46,12 +46,7 @@ def encode_train(train_df, test_df):
         './data/application_test.csv.encoded.feather')
 
 
-def main():
-    train_df = pd.read_feather('./data/application_train.csv.feather')
-    test_df = pd.read_feather('./data/application_test.csv.feather')
-    encode_train(train_df, test_df)
-
-    train_df = train_df[['SK_ID_CURR', 'TARGET']]
+def encode_prev(train_df):
     prev_df = pd.read_feather(
         './data/previous_application.csv.feather')
     df = train_df.merge(prev_df, on='SK_ID_CURR')
@@ -85,6 +80,29 @@ def main():
     res_df.columns = ['ENCODED_{}'.format(c) for c in cols]
     pd.concat([prev_df, res_df], axis=1).to_feather(
         './data/previous_application.csv.encoded.feather')
+
+
+def main():
+    train_df = pd.read_feather('./data/application_train.csv.feather')
+    test_df = pd.read_feather('./data/application_test.csv.feather')
+    encode_train(train_df, test_df)
+
+    train_df = train_df[['SK_ID_CURR', 'TARGET']]
+    encode_prev(train_df)
+
+    inst_df = pd.read_feather(
+        './data/installments_payments.csv.feather')
+    df = train_df.merge(inst_df, on='SK_ID_CURR')
+
+    cols = [
+        'NUM_INSTALMENT_VERSION',  # Version of installment calendar (0 is for credit card) of previous credit. Change of installment version from month to month signifies that some parameter of payment calendar has changed,  # noqa
+    ]
+    encoder = TargetEncoder(cols=cols)
+    encoder.fit(df[cols], df['TARGET'])
+    res_df = encoder.transform(inst_df[cols])
+    res_df.columns = ['ENCODED_{}'.format(c) for c in cols]
+    pd.concat([inst_df, res_df], axis=1).to_feather(
+        './data/installments_payments.csv.encoded.feather')
 
 
 if __name__ == '__main__':

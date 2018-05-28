@@ -252,7 +252,28 @@ def join_prev_df(df, test_df, prev_df, features):
                 'DAYS_LAST_DUE_1ST_VERSION',  # Relative to application date of current application when was the first due of the previous application,time only relative to the application # noqa
                 'DAYS_LAST_DUE',  # Relative to application date of current application when was the last due date of the previous application,time only relative to the application # noqa
                 'DAYS_TERMINATION',  # Relative to application date of current application when was the expected termination of the previous application,time only relative to the application # noqa
-                'ENCODED_SELLERPLACE_AREA',
+                # encoded
+                'ENCODED_NAME_CONTRACT_TYPE',
+                'ENCODED_WEEKDAY_APPR_PROCESS_START',  # On which day of the week did the client apply for previous application, # noqa
+                'ENCODED_HOUR_APPR_PROCESS_START',  # Approximately at what day hour did the client apply for the previous application,rounded # noqa
+                'ENCODED_FLAG_LAST_APPL_PER_CONTRACT',  # Flag if it was last application for the previous contract. Sometimes by mistake of client or our clerk there could be more applications for one single contract, # noqa
+                'ENCODED_NFLAG_LAST_APPL_IN_DAY',  # Flag if the application was the last application per day of the client. Sometimes clients apply for more applications a day. Rarely it could also be error in our system that one application is in the database twice, # noqa
+                # 'ENCODED_NFLAG_MICRO_CASH',  # Flag Micro finance loan, # missing? # noqa
+                'ENCODED_NAME_CASH_LOAN_PURPOSE',  # Purpose of the cash loan, # noqa
+                'ENCODED_NAME_CONTRACT_STATUS',
+                'ENCODED_NAME_PAYMENT_TYPE',  # Payment method that client chose to pay for the previous application, # noqa
+                'ENCODED_CODE_REJECT_REASON',  # Why was the previous application rejected, # noqa
+                'ENCODED_NAME_TYPE_SUITE',  # Who accompanied client when applying for the previous application, # noqa
+                'ENCODED_NAME_CLIENT_TYPE',  # Was the client old or new client when applying for the previous application, # noqa
+                'ENCODED_NAME_GOODS_CATEGORY',  # What kind of goods did the client apply for in the previous application, # noqa
+                'ENCODED_NAME_PORTFOLIO',  # "Was the previous application for CASH, POS, CAR, <85>", # noqa
+                'ENCODED_NAME_PRODUCT_TYPE',  # Was the previous application x-sell o walk-in, # noqa
+                'ENCODED_CHANNEL_TYPE',  # Through which channel we acquired the client on the previous application, # noqa
+                'ENCODED_SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
+                'ENCODED_NAME_SELLER_INDUSTRY',  # The industry of the seller, # noqa
+                'ENCODED_NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
+                'ENCODED_PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa
+                'ENCODED_NFLAG_INSURED_ON_APPROVAL',  # Did the client requested insurance during the previous application, # noqa
             ],
         ],
     ]:
@@ -269,27 +290,27 @@ def join_prev_df(df, test_df, prev_df, features):
 
     # categorical
     for f in [
-        'NAME_CONTRACT_TYPE',
-        'WEEKDAY_APPR_PROCESS_START',  # On which day of the week did the client apply for previous application, # noqa
-        'HOUR_APPR_PROCESS_START',  # Approximately at what day hour did the client apply for the previous application,rounded # noqa
-        'FLAG_LAST_APPL_PER_CONTRACT',  # Flag if it was last application for the previous contract. Sometimes by mistake of client or our clerk there could be more applications for one single contract, # noqa
-        'NFLAG_LAST_APPL_IN_DAY',  # Flag if the application was the last application per day of the client. Sometimes clients apply for more applications a day. Rarely it could also be error in our system that one application is in the database twice, # noqa
-        # 'NFLAG_MICRO_CASH',  # Flag Micro finance loan, # missing? # noqa
-        'NAME_CASH_LOAN_PURPOSE',  # Purpose of the cash loan, # noqa
-        'NAME_CONTRACT_STATUS',
-        'NAME_PAYMENT_TYPE',  # Payment method that client chose to pay for the previous application, # noqa
-        'CODE_REJECT_REASON',  # Why was the previous application rejected, # noqa
-        'NAME_TYPE_SUITE',  # Who accompanied client when applying for the previous application, # noqa
-        'NAME_CLIENT_TYPE',  # Was the client old or new client when applying for the previous application, # noqa
-        'NAME_GOODS_CATEGORY',  # What kind of goods did the client apply for in the previous application, # noqa
-        'NAME_PORTFOLIO',  # "Was the previous application for CASH, POS, CAR, <85>", # noqa
-        'NAME_PRODUCT_TYPE',  # Was the previous application x-sell o walk-in, # noqa
-        'CHANNEL_TYPE',  # Through which channel we acquired the client on the previous application, # noqa
-        # 'SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
-        'NAME_SELLER_INDUSTRY',  # The industry of the seller, # noqa
-        'NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
-        'PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa
-        'NFLAG_INSURED_ON_APPROVAL',  # Did the client requested insurance during the previous application, # noqa
+        # 'NAME_CONTRACT_TYPE',
+        # 'WEEKDAY_APPR_PROCESS_START',  # On which day of the week did the client apply for previous application, # noqa
+        # 'HOUR_APPR_PROCESS_START',  # Approximately at what day hour did the client apply for the previous application,rounded # noqa
+        # 'FLAG_LAST_APPL_PER_CONTRACT',  # Flag if it was last application for the previous contract. Sometimes by mistake of client or our clerk there could be more applications for one single contract, # noqa
+        # 'NFLAG_LAST_APPL_IN_DAY',  # Flag if the application was the last application per day of the client. Sometimes clients apply for more applications a day. Rarely it could also be error in our system that one application is in the database twice, # noqa
+        # # 'NFLAG_MICRO_CASH',  # Flag Micro finance loan, # missing? # noqa
+        # 'NAME_CASH_LOAN_PURPOSE',  # Purpose of the cash loan, # noqa
+        # 'NAME_CONTRACT_STATUS',
+        # 'NAME_PAYMENT_TYPE',  # Payment method that client chose to pay for the previous application, # noqa
+        # 'CODE_REJECT_REASON',  # Why was the previous application rejected, # noqa
+        # 'NAME_TYPE_SUITE',  # Who accompanied client when applying for the previous application, # noqa
+        # 'NAME_CLIENT_TYPE',  # Was the client old or new client when applying for the previous application, # noqa
+        # 'NAME_GOODS_CATEGORY',  # What kind of goods did the client apply for in the previous application, # noqa
+        # 'NAME_PORTFOLIO',  # "Was the previous application for CASH, POS, CAR, <85>", # noqa
+        # 'NAME_PRODUCT_TYPE',  # Was the previous application x-sell o walk-in, # noqa
+        # 'CHANNEL_TYPE',  # Through which channel we acquired the client on the previous application, # noqa
+        # # 'SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
+        # 'NAME_SELLER_INDUSTRY',  # The industry of the seller, # noqa
+        # 'NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
+        # 'PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa
+        # 'NFLAG_INSURED_ON_APPROVAL',  # Did the client requested insurance during the previous application, # noqa
     ]:
         g = prev_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
         g = g.unstack(1)

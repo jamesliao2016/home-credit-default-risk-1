@@ -451,14 +451,15 @@ def train(
 ):
     # filter by sample id
     sk_id_curr = pd.concat([df['SK_ID_CURR'], test_df['SK_ID_CURR']]).unique()
-    pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)]
-    credit_df = credit_df[credit_df['SK_ID_CURR'].isin(sk_id_curr)]
-    prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)]
-    inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)]
+    pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
+    credit_df = credit_df[
+        credit_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
+    prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
+    inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
 
-    bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)]
+    bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
     sk_id_bure = bure_df['SK_ID_BUREAU'].unique()
-    bbal_df = bbal_df[bbal_df['SK_ID_BUREAU'].isin(sk_id_bure)]
+    bbal_df = bbal_df[bbal_df['SK_ID_BUREAU'].isin(sk_id_bure)].reset_index()
 
     features = [
         'EXT_SOURCE_1',

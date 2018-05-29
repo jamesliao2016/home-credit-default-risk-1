@@ -193,45 +193,97 @@ def join_bure_df(df, test_df, bure_df, orig_bbal_df, features):
     return df, test_df, features
 
 
-def join_credit_df(df, test_df, credit_df, features, cat_features):
-    # TODO: recent credit
-    grp = credit_df.groupby('SK_ID_CURR')
-    for agg, columns in [
-        [
-            'mean', [
-                'SK_DPD',
-                'SK_DPD_DEF',
-                'CNT_DRAWINGS_ATM_CURRENT',  # Number of drawings at ATM during this month on the previous credit # noqa
-                'CNT_DRAWINGS_CURRENT',  # Number of drawings during this month on the previous credit # noqa
-                'CNT_DRAWINGS_OTHER_CURRENT',  # Number of other drawings during this month on the previous credit # noqa
-                'CNT_DRAWINGS_POS_CURRENT',  # Number of drawings for goods during this month on the previous credit # noqa
-            ],
-        ],
+def join_credit_df(df, test_df, orig_credit_df, features, cat_features):
+    for r in [
+        1,
+        12,
+        10*12,
     ]:
-        if agg == 'mean':
-            g = grp[columns].mean()
-        else:
-            raise RuntimeError('agg is invalid {}'.format(agg))
-        columns = ['credit_{}_{}'.format(c, agg) for c in columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+        credit_df = orig_credit_df[orig_credit_df['MONTHS_BALANCE'] >= -r]
+        grp = credit_df.groupby('SK_ID_CURR')
+        for agg, columns in [
+            [
+                'count', [],
+            ],
+            [
+                'mean', [
+                    'SK_DPD',
+                    'SK_DPD_DEF',
+                    'CNT_DRAWINGS_ATM_CURRENT',  # Number of drawings at ATM during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_CURRENT',  # Number of drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_OTHER_CURRENT',  # Number of other drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_POS_CURRENT',  # Number of drawings for goods during this month on the previous credit # noqa
+                ],
+            ],
+            [
+                'max', [
+                    'SK_DPD',
+                    'SK_DPD_DEF',
+                    'CNT_DRAWINGS_ATM_CURRENT',  # Number of drawings at ATM during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_CURRENT',  # Number of drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_OTHER_CURRENT',  # Number of other drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_POS_CURRENT',  # Number of drawings for goods during this month on the previous credit # noqa
+                ],
+            ],
+            [
+                'min', [
+                    'SK_DPD',
+                    'SK_DPD_DEF',
+                    'CNT_DRAWINGS_ATM_CURRENT',  # Number of drawings at ATM during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_CURRENT',  # Number of drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_OTHER_CURRENT',  # Number of other drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_POS_CURRENT',  # Number of drawings for goods during this month on the previous credit # noqa
+                ],
+            ],
+            [
+                'sum', [
+                    'SK_DPD',
+                    'SK_DPD_DEF',
+                    'CNT_DRAWINGS_ATM_CURRENT',  # Number of drawings at ATM during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_CURRENT',  # Number of drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_OTHER_CURRENT',  # Number of other drawings during this month on the previous credit # noqa
+                    'CNT_DRAWINGS_POS_CURRENT',  # Number of drawings for goods during this month on the previous credit # noqa
+                ],
+            ],
+        ]:
+            if agg == 'count':
+                g = grp[['SK_ID_PREV']].count()
+            elif agg == 'mean':
+                g = grp[columns].mean()
+            elif agg == 'max':
+                g = grp[columns].max()
+            elif agg == 'min':
+                g = grp[columns].min()
+            elif agg == 'sum':
+                g = grp[columns].sum()
+            else:
+                raise RuntimeError('agg is invalid {}'.format(agg))
 
-    # categorical
-    cat_cols = ['NAME_CONTRACT_STATUS']
-    for f in cat_cols:
-        g = credit_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
-        g = g.unstack(1)
-        columns = ['credit_{}_{}_count'.format(f, c) for c in g.columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+            if agg == 'count':
+                columns = ['credit_recent_{}_count'.format(r)]
+            else:
+                columns = ['credit_recent_{}_{}_{}'.format(
+                    r, c, agg) for c in columns]
+            g.columns = columns
+            features += columns
+            g = g.reset_index()
+            df = df.merge(g, on='SK_ID_CURR', how='left')
+            test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
-    credit_df = credit_df.sort_values(
+        # categorical
+        cat_cols = ['NAME_CONTRACT_STATUS']
+        for f in cat_cols:
+            g = credit_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
+            g = g.unstack(1)
+            columns = ['credit_recent_{}_{}_{}_count'.format(
+                r, f, c) for c in g.columns]
+            g.columns = columns
+            features += columns
+            g = g.reset_index()
+            df = df.merge(g, on='SK_ID_CURR', how='left')
+            test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
+    credit_df = orig_credit_df.sort_values(
         ['SK_ID_CURR', 'MONTHS_BALANCE'], ascending=False)
     for r in range(1):
         g = credit_df.groupby('SK_ID_CURR').nth(r)

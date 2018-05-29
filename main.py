@@ -193,7 +193,7 @@ def join_bure_df(df, test_df, bure_df, orig_bbal_df, features):
     return df, test_df, features
 
 
-def join_credit_df(df, test_df, credit_df, features):
+def join_credit_df(df, test_df, credit_df, features, cat_features):
     # TODO: recent credit
     grp = credit_df.groupby('SK_ID_CURR')
     for agg, columns in [
@@ -220,7 +220,8 @@ def join_credit_df(df, test_df, credit_df, features):
         test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
     # categorical
-    for f in ['NAME_CONTRACT_STATUS']:
+    cat_cols = ['NAME_CONTRACT_STATUS']
+    for f in cat_cols:
         g = credit_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
         g = g.unstack(1)
         columns = ['credit_{}_{}_count'.format(f, c) for c in g.columns]
@@ -230,7 +231,19 @@ def join_credit_df(df, test_df, credit_df, features):
         df = df.merge(g, on='SK_ID_CURR', how='left')
         test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
-    return df, test_df, features
+    credit_df = credit_df.sort_values(
+        ['SK_ID_CURR', 'MONTHS_BALANCE'], ascending=False)
+    for r in range(1):
+        g = credit_df.groupby('SK_ID_CURR').nth(r)
+        g = g[cat_cols]
+        columns = ['credit_recent_{}_{}'.format(r, c) for c in cat_cols]
+        g.columns = columns
+        cat_features += columns
+        g = g.reset_index()
+        df = df.merge(g, on='SK_ID_CURR', how='left')
+        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+
+    return df, test_df, features, cat_features
 
 
 def join_prev_df(df, test_df, prev_df, features):
@@ -602,7 +615,8 @@ def train(
         df, test_df, bure_df, bbal_df, features)
 
     # credit card
-    df, test_df, features = join_credit_df(df, test_df, credit_df, features)
+    df, test_df, features, cat_feature = join_credit_df(
+        df, test_df, credit_df, features, cat_feature)
 
     # prev_df
     df, test_df, features = join_prev_df(df, test_df, prev_df, features)

@@ -82,14 +82,7 @@ def encode_prev(train_df):
         './data/previous_application.csv.encoded.feather')
 
 
-def main():
-    train_df = pd.read_feather('./data/application_train.csv.feather')
-    test_df = pd.read_feather('./data/application_test.csv.feather')
-    encode_train(train_df, test_df)
-
-    train_df = train_df[['SK_ID_CURR', 'TARGET']]
-    encode_prev(train_df)
-
+def encode_inst(train_df):
     inst_df = pd.read_feather(
         './data/installments_payments.csv.feather')
     df = train_df.merge(inst_df, on='SK_ID_CURR')
@@ -103,6 +96,16 @@ def main():
     res_df.columns = ['ENCODED_{}'.format(c) for c in cols]
     pd.concat([inst_df, res_df], axis=1).to_feather(
         './data/installments_payments.csv.encoded.feather')
+
+
+def main():
+    train_df = pd.read_feather('./data/application_train.csv.feather')
+    test_df = pd.read_feather('./data/application_test.csv.feather')
+    encode_train(train_df, test_df)
+
+    train_df = train_df[['SK_ID_CURR', 'TARGET']]
+    encode_prev(train_df)
+    encode_inst(train_df)
 
 
 if __name__ == '__main__':

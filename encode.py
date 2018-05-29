@@ -98,6 +98,29 @@ def encode_inst(train_df):
         './data/installments_payments.csv.encoded.feather')
 
 
+def encode_pos(train_df):
+    pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
+
+    # diff
+    pos_df = pos_df.sort_values(
+        ['SK_ID_CURR', 'MONTHS_BALANCE'], ascending=False)
+    grp = pos_df.groupby('SK_ID_CURR').shift(1)
+    pos_df['PREV_DIFF_MB'] = grp['MONTHS_BALANCE'] - pos_df['MONTHS_BALANCE']
+    pos_df = pos_df.reset_index()
+
+    # encode
+    df = train_df.merge(pos_df, on='SK_ID_CURR')
+    cols = [
+        'NAME_CONTRACT_STATUS',
+    ]
+    encoder = TargetEncoder(cols=cols)
+    encoder.fit(df[cols], df['TARGET'])
+    res_df = encoder.transform(pos_df[cols])
+    res_df.columns = ['ENCODED_{}'.format(c) for c in cols]
+    pd.concat([pos_df, res_df], axis=1).to_feather(
+        './data/POS_CASH_balance.csv.encoded.feather')
+
+
 def main():
     train_df = pd.read_feather('./data/application_train.csv.feather')
     test_df = pd.read_feather('./data/application_test.csv.feather')
@@ -106,6 +129,7 @@ def main():
     train_df = train_df[['SK_ID_CURR', 'TARGET']]
     encode_prev(train_df)
     encode_inst(train_df)
+    encode_pos(train_df)
 
 
 if __name__ == '__main__':

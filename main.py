@@ -28,6 +28,7 @@ def join_pos_df(df, test_df, orig_pos_df, features):
                     'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
                     'SK_DPD',  # (days past due) during the month of previous credit # noqa
                     'SK_DPD_DEF',  # DPD during the month with tolerance (debts with low loan amounts are ignored) of the previous credit # noqa
+                    'PREV_DIFF_MB',
                 ],
             ],
             [
@@ -36,6 +37,7 @@ def join_pos_df(df, test_df, orig_pos_df, features):
                     'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
                     'SK_DPD',  # (days past due) during the month of previous credit # noqa
                     'SK_DPD_DEF',  # DPD during the month with tolerance (debts with low loan amounts are ignored) of the previous credit # noqa
+                    'PREV_DIFF_MB',
                 ],
             ],
             [
@@ -44,6 +46,7 @@ def join_pos_df(df, test_df, orig_pos_df, features):
                     'CNT_INSTALMENT_FUTURE',  # Installments left to pay on the previous credit # noqa
                     'SK_DPD',  # (days past due) during the month of previous credit # noqa
                     'SK_DPD_DEF',  # DPD during the month with tolerance (debts with low loan amounts are ignored) of the previous credit # noqa
+                    'PREV_DIFF_MB',
                 ],
             ],
         ]:
@@ -707,7 +710,7 @@ def main():
     print('load data...')
     df = pd.read_feather('./data/application_train.csv.encoded.feather')
     print('n_train: {}'.format(len(df)))
-    pos_df = pd.read_feather('./data/POS_CASH_balance.csv.feather')
+    pos_df = pd.read_feather('./data/POS_CASH_balance.csv.encoded.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
     prev_df = pd.read_feather(
         './data/previous_application.csv.encoded.feather')

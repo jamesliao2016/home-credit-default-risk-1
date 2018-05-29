@@ -713,7 +713,7 @@ def train(
         'objective': 'binary',
         'metric': 'auc',
         'learning_rate': 0.05,
-        'num_leaves': 15,
+        'num_leaves': 7,
         'max_depth': -1,  # -1 means no limit
         'min_data_in_leaf': 40,
         'max_bin': 64,

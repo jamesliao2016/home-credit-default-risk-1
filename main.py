@@ -88,6 +88,11 @@ def join_pos_df(df, test_df, orig_pos_df, features):
 
 
 def join_bure_df(df, test_df, bure_df, orig_bbal_df, features):
+    tmp = pd.read_feather('./data/preprocessed_bureau.csv.feather')
+    df = df.merge(tmp, on='SK_ID_CURR', how='left')
+    test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
+    features += tmp.columns.tolist()
+    del tmp
     # balance
     bbal_features = []
     for recent in [

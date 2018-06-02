@@ -199,6 +199,12 @@ def join_bure_df(df, test_df, bure_df, orig_bbal_df, features):
 
 
 def join_credit_df(df, test_df, orig_credit_df, features, cat_features):
+    tmp = pd.read_feather('./data/preprocessed_credit_balance.csv.feather')
+    df = df.merge(tmp, on='SK_ID_CURR', how='left')
+    test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
+    features += tmp.columns.tolist()
+    del tmp
+
     for r in [
         1,
         12,

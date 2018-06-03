@@ -310,8 +310,17 @@ def join_credit_df(df, test_df, orig_credit_df, features, cat_features):
 
 
 def join_prev_df(df, test_df, prev_df, features):
+    # preprocessed
     tmp = pd.read_feather(
         './data/preprocessed_previous_application.csv.feather')
+    df = df.merge(tmp, on='SK_ID_CURR', how='left')
+    test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
+    features += tmp.columns.tolist()
+    del tmp
+
+    # decomposed
+    tmp = pd.read_feather(
+        './data/decomposed_previous_application.csv.feather')
     df = df.merge(tmp, on='SK_ID_CURR', how='left')
     test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
     features += tmp.columns.tolist()
@@ -375,7 +384,7 @@ def join_prev_df(df, test_df, prev_df, features):
                 'ENCODED_NAME_PORTFOLIO',  # "Was the previous application for CASH, POS, CAR, <85>", # noqa
                 'ENCODED_NAME_PRODUCT_TYPE',  # Was the previous application x-sell o walk-in, # noqa
                 'ENCODED_CHANNEL_TYPE',  # Through which channel we acquired the client on the previous application, # noqa
-                'ENCODED_SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
+                # 'ENCODED_SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
                 'ENCODED_NAME_SELLER_INDUSTRY',  # The industry of the seller, # noqa
                 'ENCODED_NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
                 'ENCODED_PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa

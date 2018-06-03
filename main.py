@@ -310,6 +310,12 @@ def join_credit_df(df, test_df, orig_credit_df, features, cat_features):
 
 
 def join_prev_df(df, test_df, prev_df, features):
+    tmp = pd.read_feather(
+        './data/preprocessed_previous_application.csv.feather')
+    df = df.merge(tmp, on='SK_ID_CURR', how='left')
+    test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
+    features += tmp.columns.tolist()
+    del tmp
     # TODO: increase annuity?
     # TODO: recent application
     mapping = {

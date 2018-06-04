@@ -13,6 +13,8 @@ def main():
     train_df.fillna('__NaN__', inplace=True)
     test_df = test_df[columns]
     test_df.fillna('__NaN__', inplace=True)
+    train_id = train_df.pop('SK_ID_CURR')
+    test_id = test_df.pop('SK_ID_CURR')
     target = train_df['TARGET']
     train_res = train_df[[]].copy()
     test_res = test_df[[]].copy()
@@ -27,7 +29,9 @@ def main():
 
     encoder = TargetEncoder()
     train_res = encoder.fit_transform(train_res, target)
+    train_res['SK_ID_CURR'] = train_id
     test_res = encoder.transform(test_res)
+    test_res['SK_ID_CURR'] = test_id
     train_res.to_feather(
         './data/application_train.2nd-order-categorical.feather')
     test_res.to_feather(

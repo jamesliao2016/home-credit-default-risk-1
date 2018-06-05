@@ -9,6 +9,12 @@ pd.set_option("display.max_columns", 100)
 
 
 def join_pos_df(df, test_df, orig_pos_df, features):
+    tmp = pd.read_feather('./data/POS_CASH_balance.numeric.2nd-order.feather')
+    df = df.merge(tmp, on='SK_ID_CURR', how='left')
+    test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
+    features += tmp.columns.tolist()
+    del tmp
+
     prefix = 'pos'
     for recent in [
         0,

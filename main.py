@@ -441,6 +441,14 @@ def join_prev_df(df, test_df, prev_df, features):
 
 
 def join_inst_df(df, test_df, inst_df, features):
+    # numeric 2nd order
+    tmp = pd.read_feather(
+        './data/installments_payments.numeric.2nd-order.feather')
+    df = df.merge(tmp, on='SK_ID_CURR', how='left')
+    test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
+    features += tmp.columns.tolist()
+    del tmp
+
     grp = inst_df.groupby('SK_ID_CURR')
     for agg, columns in [
         [

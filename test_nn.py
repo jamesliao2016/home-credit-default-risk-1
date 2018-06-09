@@ -1,6 +1,11 @@
 import numpy as np
 import pandas as pd
-from nn import NN
+from chainer.training import Trainer
+from chainer.iterators import SerialIterator
+from chainer.optimizers import Adam
+from chainer.training.updaters import StandardUpdater
+from chainer.training.extensions import Evaluator
+from nn import create_model_and_datasets
 
 
 def _create_doc_feature(prefix, n):
@@ -14,17 +19,29 @@ def _create_doc_feature(prefix, n):
     return np.array(data)
 
 
-def test_fit():
-    np.random.seed(215)
-    n = 100
+def _create_df(n):
     df = pd.DataFrame(index=np.arange(n))
-
     df['A'] = _create_doc_feature('a', n)
     df['B'] = _create_doc_feature('b', n)
-    df['T'] = np.random.randn(n)
-    y = df.pop('T')
-    nn = NN(df)
+    df['C'] = np.random.randn(n)
+    df['D'] = np.random.randn(n)
+    df.loc[:50, 'D'] = np.NaN
+    return df
 
-    assert len(nn.cat_columns) == 2
 
-    nn.fit(df, y)
+def test_fit():
+    np.random.seed(215)
+    train_df = _create_df(100)
+    train_df['T'] = (np.random.randn(100) > 0).astype('i')
+    test_df = _create_df(20)
+    model, train_dset, test_dset = create_model_and_datasets(
+        train_df, test_df, 'T')
+
+    train_iter = SerialIterator(train_dset, 10)
+    test_iter = SerialIterator(train_dset, 10, False, False)
+    optimizer = Adam()
+    optimizer.setup(model)
+    updater = StandardUpdater(train_iter, optimizer, device=0)
+    trainer = Trainer(updater, (5, 'epoch'), out='nn_result')
+    trainer.extend(Evaluator(test_iter, model, device=0))
+    trainer.run()

@@ -93,7 +93,7 @@ def join_pos_df(df, test_df, orig_pos_df, features):
     return df, test_df, features
 
 
-def join_bure_df(df, test_df, bure_df, orig_bbal_df, features):
+def join_bure_df(df, test_df, features):
     # 2nd order numeric
     tmp = pd.read_feather('./data/bureau.numeric.2nd-order.feather')
     df = df.merge(tmp, on='SK_ID_CURR', how='left')
@@ -106,107 +106,9 @@ def join_bure_df(df, test_df, bure_df, orig_bbal_df, features):
     test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
     features += tmp.columns.tolist()
     del tmp
-    # balance
-    bbal_features = []
-    for recent in [
-        0,
-        1,
-        12,
-        12*10,
-    ]:
-        bbal_df = orig_bbal_df[orig_bbal_df['MONTHS_BALANCE'] >= -recent]
-        g = bbal_df.groupby(['SK_ID_BUREAU'])[['MONTHS_BALANCE']].count()
-        columns = ['recent_{}_bbal_count'.format(recent)]
-        g.columns = columns
-        bbal_features += columns
-        bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
 
-        g = bbal_df.groupby(
-            ['SK_ID_BUREAU', 'STATUS'])['MONTHS_BALANCE'].count()
-        g = g.unstack(1)
-        columns = ['recent_{}_bbal_STATUS_{}_count'.format(
-            recent, c) for c in g.columns]
-        g.columns = columns
-        bbal_features += columns
-        bure_df = bure_df.merge(g, on='SK_ID_BUREAU', how='left')
-
-    # bureau
-    grp = bure_df.groupby('SK_ID_CURR')
-    for agg, columns in {
-        'count': [],
-        'mean': [
-            'DAYS_CREDIT',  # How many days before current application did client apply for Credit Bureau credit,time only relative to the application  # noqa
-            'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
-            'DAYS_ENDDATE_FACT',  # Days since CB credit ended at the time of application in Home Credit (only for closed credit),time only relative to the application # noqa
-            'DAYS_CREDIT_UPDATE',  # How many days before loan application did last information about the Credit Bureau credit come,time only relative to the application # noqa
-            'CREDIT_DAY_OVERDUE',  # Number of days past due on CB credit at the time of application for related loan in our sample # noqa
-            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
-            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
-            'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
-            'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
-        ],
-        'sum': [
-            'AMT_CREDIT_SUM_DEBT',  # Current debt on Credit Bureau credit
-            'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
-        ] + bbal_features,
-        'max': [
-            'DAYS_CREDIT',
-            'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
-            'DAYS_ENDDATE_FACT',  # Days since CB credit ended at the time of application in Home Credit (only for closed credit),time only relative to the application # noqa
-            'DAYS_CREDIT_UPDATE',  # How many days before loan application did last information about the Credit Bureau credit come,time only relative to the application # noqa
-            'CREDIT_DAY_OVERDUE',  # Number of days past due on CB credit at the time of application for related loan in our sample # noqa
-            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
-            'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
-            'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
-        ],
-        'min': [
-            'DAYS_CREDIT',
-            'DAYS_CREDIT_ENDDATE',  # Remaining duration of CB credit (in days) at the time of application in Home Credit,time only relative to the application # noqa
-            'DAYS_ENDDATE_FACT',  # Days since CB credit ended at the time of application in Home Credit (only for closed credit),time only relative to the application # noqa
-            'DAYS_CREDIT_UPDATE',  # How many days before loan application did last information about the Credit Bureau credit come,time only relative to the application # noqa
-            'CREDIT_DAY_OVERDUE',  # Number of days past due on CB credit at the time of application for related loan in our sample # noqa
-            'AMT_CREDIT_SUM',  # Current credit amount for the Credit Bureau credit  # noqa
-            'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
-            'AMT_CREDIT_MAX_OVERDUE',  # Maximal amount overdue on the Credit Bureau credit so far (at application date of loan in our sample), # noqa
-        ],
-    }.items():
-        if agg == 'count':
-            # description is wrong...
-            g = grp[['SK_ID_BUREAU']].count()
-        elif agg == 'mean':
-            g = grp[columns].mean()
-        elif agg == 'max':
-            g = grp[columns].max()
-        elif agg == 'min':
-            g = grp[columns].min()
-        elif agg == 'sum':
-            g = grp[columns].sum()
-        else:
-            raise RuntimeError('agg is invalid {}'.format(agg))
-
-        if agg == 'count':
-            columns = ['bureau_COUNT']
-        else:
-            columns = ['bureau_{}_{}'.format(c, agg) for c in columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
-
-    # categorical
-    for f in [
-        'CREDIT_ACTIVE',  # Status of the Credit Bureau (CB) reported credits
-        'CREDIT_CURRENCY',  # Recoded currency of the Credit Bureau credit,recoded # noqa
-    ]:
-        g = bure_df.groupby(['SK_ID_CURR', f])['SK_ID_BUREAU'].count()
-        g = g.unstack(1)
-        columns = ['bureau_{}_{}_count'.format(f, c) for c in g.columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+    while 'SK_ID_CURR' in features:
+        features.remove('SK_ID_CURR')
 
     return df, test_df, features
 
@@ -580,10 +482,6 @@ def train(
     prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
     inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
 
-    bure_df = bure_df[bure_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
-    sk_id_bure = bure_df['SK_ID_BUREAU'].unique()
-    bbal_df = bbal_df[bbal_df['SK_ID_BUREAU'].isin(sk_id_bure)].reset_index()
-
     features = df.columns.values.tolist()
     features.remove('SK_ID_CURR')
     features.remove('TARGET')
@@ -594,8 +492,7 @@ def train(
     df, test_df, features = join_pos_df(df, test_df, pos_df, features)
 
     # credit bureau
-    df, test_df, features = join_bure_df(
-        df, test_df, bure_df, bbal_df, features)
+    df, test_df, features = join_bure_df(df, test_df, features)
 
     # credit card
     df, test_df, features, cat_feature = join_credit_df(

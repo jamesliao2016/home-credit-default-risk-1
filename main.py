@@ -255,7 +255,7 @@ def join_prev_df(df, test_df, features):
     return df, test_df, features
 
 
-def join_inst_df(df, test_df, inst_df, features):
+def join_inst_df(df, test_df, features):
     # numeric 2nd order
     tmp = pd.read_feather(
         './data/installments_payments.numeric.2nd-order.feather')
@@ -264,106 +264,19 @@ def join_inst_df(df, test_df, inst_df, features):
     features += tmp.columns.tolist()
     del tmp
 
-    grp = inst_df.groupby('SK_ID_CURR')
-    for agg, columns in [
-        [
-            'count', [],
-        ],
-        [
-            'mean', [
-                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
-                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
-                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
-                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
-                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
-                'ENCODED_NUM_INSTALMENT_VERSION',
-            ],
-        ],
-        [
-            'sum', [
-                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
-                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
-                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
-                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
-                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
-            ],
-        ],
-        [
-            'min', [
-                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
-                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
-                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
-                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
-                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
-            ],
-        ],
-        [
-            'max', [
-                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
-                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
-                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
-                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
-                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
-            ],
-        ],
-        [
-            'std', [
-                'NUM_INSTALMENT_NUMBER',  # On which installment we observe payment,  # noqa
-                'DAYS_INSTALMENT',  # When the installment of previous credit was supposed to be paid (relative to application date of current loan),time only relative to the application  # noqa
-                'DAYS_ENTRY_PAYMENT',  # When was the installments of previous credit paid actually (relative to application date of current loan),time only relative to the application  # noqa
-                'AMT_INSTALMENT',  # What was the prescribed installment amount of previous credit on this installment,  # noqa
-                'AMT_PAYMENT',  # What the client actually paid on previous credit on this installment,  # noqa
-            ],
-        ],
-        [
-            'nunique', [
-                'NUM_INSTALMENT_VERSION',  # Version of installment calendar (0 is for credit card) of previous credit. Change of installment version from month to month signifies that some parameter of payment calendar has changed,  # noqa
-            ],
-        ],
-    ]:
-        if agg == 'count':
-            g = grp[['SK_ID_PREV']].count()
-        elif agg == 'mean':
-            g = grp[columns].mean()
-        elif agg == 'sum':
-            g = grp[columns].sum()
-        elif agg == 'min':
-            g = grp[columns].min()
-        elif agg == 'max':
-            g = grp[columns].min()
-        elif agg == 'std':
-            g = grp[columns].min()
-        elif agg == 'nunique':
-            g = grp[columns].nunique()
-        else:
-            raise RuntimeError('agg is invalid {}'.format(agg))
-        if agg == 'count':
-            columns = ['inst_COUNT']
-        else:
-            columns = ['inst_{}_{}'.format(c, agg) for c in columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
-
-    # categorical
-    for f in []:
-        g = inst_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
-        g = g.unstack(1)
-        columns = ['prev_{}_{}_count'.format(f, c) for c in g.columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+    # preprocessed
+    tmp = pd.read_feather(
+        './data/installments_payments.preprocessed.feather')
+    df = df.merge(tmp, on='SK_ID_CURR', how='left')
+    test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
+    features += tmp.columns.tolist()
+    del tmp
 
     return df, test_df, features
 
 
 def train(
-    df, test_df, pos_df, credit_df, prev_df, inst_df,
-    bure_df, bbal_df,
+    df, test_df, pos_df, credit_df,
     validate, importance_summay,
 ):
     # filter by sample id
@@ -371,7 +284,6 @@ def train(
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
     credit_df = credit_df[
         credit_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
-    inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
 
     features = df.columns.values.tolist()
     features.remove('SK_ID_CURR')
@@ -393,7 +305,7 @@ def train(
     df, test_df, features = join_prev_df(df, test_df, features)
 
     # inst_df
-    df, test_df, features = join_inst_df(df, test_df, inst_df, features)
+    df, test_df, features = join_inst_df(df, test_df, features)
 
     # cat features
     if len(cat_feature) > 0:
@@ -497,14 +409,6 @@ def main():
     print('n_train: {}'.format(len(df)))
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.encoded.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
-    prev_df = pd.read_feather(
-        './data/previous_application.csv.encoded.feather')
-    inst_df = pd.read_feather(
-        './data/installments_payments.csv.encoded.feather')
-
-    # bureau
-    bure_df = pd.read_feather('./data/bureau.csv.feather')
-    bbal_df = pd.read_feather('./data/bureau_balance.csv.feather')
 
     if validate:
         n_bagging = 5
@@ -531,8 +435,7 @@ def main():
         part_df = part_df.sample(frac=1)
 
         test_df['PRED_{}'.format(i)] = train(
-            part_df, test_df, pos_df, credit_df, prev_df, inst_df,
-            bure_df, bbal_df,
+            part_df, test_df, pos_df, credit_df,
             validate, importance_summay,
         )
         if validate:

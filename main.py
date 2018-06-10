@@ -232,10 +232,10 @@ def join_credit_df(df, test_df, orig_credit_df, features, cat_features):
     return df, test_df, features, cat_features
 
 
-def join_prev_df(df, test_df, prev_df, features):
+def join_prev_df(df, test_df, features):
     # preprocessed
     tmp = pd.read_feather(
-        './data/preprocessed_previous_application.csv.feather')
+        './data/previous_application.preprocessed.feather')
     df = df.merge(tmp, on='SK_ID_CURR', how='left')
     test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
     features += tmp.columns.tolist()
@@ -248,117 +248,9 @@ def join_prev_df(df, test_df, prev_df, features):
     test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
     features += tmp.columns.tolist()
     del tmp
-    # TODO: increase annuity?
-    # TODO: recent application
-    mapping = {
-        'POS mobile with interest': 'POS',
-        'POS household without interest': 'POS',
-        'POS household with interest': 'POS',
-        'POS other with interest': 'POS',
-        'POS mobile without interest': 'POS',
-        'POS industry with interest': 'POS',
-        'POS industry without interest': 'POS',
-        'POS others without interest': 'POS',
-        'Cash X-Sell: low': 'Cash',
-        'Cash X-Sell: high': 'Cash',
-        'Cash X-Sell: middle': 'Cash',
-        'Cash Street: high': 'Cash',
-        'Cash Street: middle'
-        'Cash Street: low': 'Cash',
-        'Cash': 'Cash',
-        'Card Street': 'Card',
-        'Card X-Sell': 'Card',
-    }
-    prev_df['PRODUCT_COMBINATION_PREFIX'] = prev_df[
-        'PRODUCT_COMBINATION'].map(mapping)
-    grp = prev_df.groupby('SK_ID_CURR')
-    for agg, columns in [
-        [
-            'mean', [
-                'AMT_ANNUITY',  # Annuity of the Credit Bureau credit,
-                'AMT_APPLICATION',  # For how much credit did client ask on the previous application, # noqa
-                'AMT_CREDIT',  # "Final credit amount on the previous application. This differs from AMT_APPLICATION in a way that the AMT_APPLICATION is the amount for which the client initially applied for, but during our e received different amount - AMT_CREDIT", # noqa
-                'AMT_DOWN_PAYMENT',  # Down payment on the previous application, # noqa
-                'AMT_GOODS_PRICE',  # Goods price of good that client asked for (if applicable) on the previous application, # noqa
-                'RATE_DOWN_PAYMENT',  # Down payment rate normalized on previous credit,normalized # noqa
-                'RATE_INTEREST_PRIMARY',  # Interest rate normalized on previous credit,normalized # noqa
-                'RATE_INTEREST_PRIVILEGED',  # Interest rate normalized on previous credit,normalized # noqa
-                'DAYS_DECISION',  # Relative to current application when was the decision about previous application made,time only relative to the application # noqa
-                'CNT_PAYMENT',  # Term of previous credit at application of the previous application, # noqa
-                'DAYS_FIRST_DRAWING',  # Relative to application date of current application when was the first disbursement of the previous application,time only relative to the application # noqa
-                'DAYS_FIRST_DUE',  # Relative to application date of current application when was the first due supposed to be of the previous application,time only relative to the application # noqa
-                'DAYS_LAST_DUE_1ST_VERSION',  # Relative to application date of current application when was the first due of the previous application,time only relative to the application # noqa
-                'DAYS_LAST_DUE',  # Relative to application date of current application when was the last due date of the previous application,time only relative to the application # noqa
-                'DAYS_TERMINATION',  # Relative to application date of current application when was the expected termination of the previous application,time only relative to the application # noqa
-                # encoded
-                'ENCODED_NAME_CONTRACT_TYPE',
-                'ENCODED_WEEKDAY_APPR_PROCESS_START',  # On which day of the week did the client apply for previous application, # noqa
-                'ENCODED_HOUR_APPR_PROCESS_START',  # Approximately at what day hour did the client apply for the previous application,rounded # noqa
-                'ENCODED_FLAG_LAST_APPL_PER_CONTRACT',  # Flag if it was last application for the previous contract. Sometimes by mistake of client or our clerk there could be more applications for one single contract, # noqa
-                'ENCODED_NFLAG_LAST_APPL_IN_DAY',  # Flag if the application was the last application per day of the client. Sometimes clients apply for more applications a day. Rarely it could also be error in our system that one application is in the database twice, # noqa
-                # 'ENCODED_NFLAG_MICRO_CASH',  # Flag Micro finance loan, # missing? # noqa
-                'ENCODED_NAME_CASH_LOAN_PURPOSE',  # Purpose of the cash loan, # noqa
-                'ENCODED_NAME_CONTRACT_STATUS',
-                'ENCODED_NAME_PAYMENT_TYPE',  # Payment method that client chose to pay for the previous application, # noqa
-                'ENCODED_CODE_REJECT_REASON',  # Why was the previous application rejected, # noqa
-                'ENCODED_NAME_TYPE_SUITE',  # Who accompanied client when applying for the previous application, # noqa
-                'ENCODED_NAME_CLIENT_TYPE',  # Was the client old or new client when applying for the previous application, # noqa
-                'ENCODED_NAME_GOODS_CATEGORY',  # What kind of goods did the client apply for in the previous application, # noqa
-                'ENCODED_NAME_PORTFOLIO',  # "Was the previous application for CASH, POS, CAR, <85>", # noqa
-                'ENCODED_NAME_PRODUCT_TYPE',  # Was the previous application x-sell o walk-in, # noqa
-                'ENCODED_CHANNEL_TYPE',  # Through which channel we acquired the client on the previous application, # noqa
-                # 'ENCODED_SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
-                'ENCODED_NAME_SELLER_INDUSTRY',  # The industry of the seller, # noqa
-                'ENCODED_NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
-                'ENCODED_PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa
-                'ENCODED_NFLAG_INSURED_ON_APPROVAL',  # Did the client requested insurance during the previous application, # noqa
-            ],
-        ],
-    ]:
-        if agg == 'mean':
-            g = grp[columns].mean()
-        else:
-            raise RuntimeError('agg is invalid {}'.format(agg))
-        columns = ['prev_{}_{}'.format(c, agg) for c in columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
 
-    # categorical
-    for f in [
-        # 'NAME_CONTRACT_TYPE',
-        # 'WEEKDAY_APPR_PROCESS_START',  # On which day of the week did the client apply for previous application, # noqa
-        # 'HOUR_APPR_PROCESS_START',  # Approximately at what day hour did the client apply for the previous application,rounded # noqa
-        # 'FLAG_LAST_APPL_PER_CONTRACT',  # Flag if it was last application for the previous contract. Sometimes by mistake of client or our clerk there could be more applications for one single contract, # noqa
-        # 'NFLAG_LAST_APPL_IN_DAY',  # Flag if the application was the last application per day of the client. Sometimes clients apply for more applications a day. Rarely it could also be error in our system that one application is in the database twice, # noqa
-        # # 'NFLAG_MICRO_CASH',  # Flag Micro finance loan, # missing? # noqa
-        # 'NAME_CASH_LOAN_PURPOSE',  # Purpose of the cash loan, # noqa
-        # 'NAME_CONTRACT_STATUS',
-        # 'NAME_PAYMENT_TYPE',  # Payment method that client chose to pay for the previous application, # noqa
-        # 'CODE_REJECT_REASON',  # Why was the previous application rejected, # noqa
-        # 'NAME_TYPE_SUITE',  # Who accompanied client when applying for the previous application, # noqa
-        # 'NAME_CLIENT_TYPE',  # Was the client old or new client when applying for the previous application, # noqa
-        # 'NAME_GOODS_CATEGORY',  # What kind of goods did the client apply for in the previous application, # noqa
-        # 'NAME_PORTFOLIO',  # "Was the previous application for CASH, POS, CAR, <85>", # noqa
-        # 'NAME_PRODUCT_TYPE',  # Was the previous application x-sell o walk-in, # noqa
-        # 'CHANNEL_TYPE',  # Through which channel we acquired the client on the previous application, # noqa
-        # # 'SELLERPLACE_AREA',  # Selling area of seller place of the previous application, # encoded # noqa
-        # 'NAME_SELLER_INDUSTRY',  # The industry of the seller, # noqa
-        # 'NAME_YIELD_GROUP',  # Grouped interest rate into small medium and high of the previous application,grouped # noqa
-        # 'PRODUCT_COMBINATION',  # Detailed product combination of the previous application, # noqa
-        # 'NFLAG_INSURED_ON_APPROVAL',  # Did the client requested insurance during the previous application, # noqa
-        'PRODUCT_COMBINATION_PREFIX',
-    ]:
-        g = prev_df.groupby(['SK_ID_CURR', f])['SK_ID_PREV'].count()
-        g = g.unstack(1)
-        columns = ['prev_{}_{}_count'.format(f, c) for c in g.columns]
-        g.columns = columns
-        features += columns
-        g = g.reset_index()
-        df = df.merge(g, on='SK_ID_CURR', how='left')
-        test_df = test_df.merge(g, on='SK_ID_CURR', how='left')
+    while 'SK_ID_CURR' in features:
+        features.remove('SK_ID_CURR')
 
     return df, test_df, features
 
@@ -479,7 +371,6 @@ def train(
     pos_df = pos_df[pos_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
     credit_df = credit_df[
         credit_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
-    prev_df = prev_df[prev_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
     inst_df = inst_df[inst_df['SK_ID_CURR'].isin(sk_id_curr)].reset_index()
 
     features = df.columns.values.tolist()
@@ -499,7 +390,7 @@ def train(
         df, test_df, credit_df, features, cat_feature)
 
     # prev_df
-    df, test_df, features = join_prev_df(df, test_df, prev_df, features)
+    df, test_df, features = join_prev_df(df, test_df, features)
 
     # inst_df
     df, test_df, features = join_inst_df(df, test_df, inst_df, features)

@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 
 def create_model_and_datasets(train_df, test_df, target):
     t = train_df.pop(target).values.reshape((-1, 1))
+    test_df.pop(target)
     df = pd.concat([train_df, test_df], axis=0)
 
     # categorical

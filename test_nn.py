@@ -35,6 +35,7 @@ def test_fit():
     train_df = _create_df(100)
     train_df['T'] = (np.random.randn(100) > 0).astype('i')
     test_df = _create_df(20)
+    test_df['T'] = np.nan
     model, train_dset, test_dset = create_model_and_datasets(
         train_df, test_df, 'T')
 

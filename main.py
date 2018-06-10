@@ -567,6 +567,39 @@ def join_inst_df(df, test_df, inst_df, features):
     return df, test_df, features
 
 
+def one_hot_encoder(df, nan_as_category=True):
+    original_columns = list(df.columns)
+    categorical_columns = [
+        col for col in df.columns if df[col].dtype == 'object']
+    df = pd.get_dummies(
+        df, columns=categorical_columns, dummy_na=nan_as_category)
+    new_columns = [c for c in df.columns if c not in original_columns]
+    return df, new_columns
+
+
+def preprocess_application(train_df, test_df, features):
+    df = train_df.append(test_df).reset_index()
+    # from jsaguiar/lightgbm-with-simple-features-0-785-lb
+    for f in ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY']:
+        df[f], uniques = pd.factorize(df[f])
+    df, cat_cols = one_hot_encoder(df)
+    features += cat_cols
+    # NaN values for DAYS_EMPLOYED: 365.243 -> nan
+    df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
+    # Some simple new features (percentages)
+    df['DAYS_EMPLOYED_PERC'] = df['DAYS_EMPLOYED'] / df['DAYS_BIRTH']
+    df['INCOME_CREDIT_PERC'] = df['AMT_INCOME_TOTAL'] / df['AMT_CREDIT']
+    df['INCOME_PER_PERSON'] = df['AMT_INCOME_TOTAL'] / df['CNT_FAM_MEMBERS']
+    df['ANNUITY_INCOME_PERC'] = df['AMT_ANNUITY'] / df['AMT_INCOME_TOTAL']
+    features += [
+        'DAYS_EMPLOYED_PERC',
+        'INCOME_CREDIT_PERC',
+        'INCOME_PER_PERSON',
+        'ANNUITY_INCOME_PERC',
+    ]
+    return df[:len(train_df)], df[len(train_df):], features
+
+
 def train(
     df, test_df, pos_df, credit_df, prev_df, inst_df,
     bure_df, bbal_df,
@@ -651,36 +684,38 @@ def train(
         'DAYS_LAST_PHONE_CHANGE',
         'OWN_CAR_AGE',  # Age of client's car,
         # encoded
-        'ENCODED_CODE_GENDER',
-        'ENCODED_FLAG_OWN_CAR',
-        'ENCODED_FLAG_OWN_REALTY',
-        'ENCODED_NAME_TYPE_SUITE',
-        'ENCODED_NAME_INCOME_TYPE',
-        'ENCODED_NAME_EDUCATION_TYPE',
-        'ENCODED_NAME_FAMILY_STATUS',
-        'ENCODED_NAME_HOUSING_TYPE',
-        'ENCODED_FLAG_MOBIL',
-        'ENCODED_FLAG_EMP_PHONE',
-        'ENCODED_FLAG_WORK_PHONE',
-        'ENCODED_FLAG_CONT_MOBILE',
-        'ENCODED_FLAG_PHONE',
-        'ENCODED_FLAG_EMAIL',
-        'ENCODED_OCCUPATION_TYPE',
-        'ENCODED_WEEKDAY_APPR_PROCESS_START',
-        'ENCODED_HOUR_APPR_PROCESS_START',
-        'ENCODED_REG_REGION_NOT_LIVE_REGION',
-        'ENCODED_REG_REGION_NOT_WORK_REGION',
-        'ENCODED_LIVE_REGION_NOT_WORK_REGION',
-        'ENCODED_REG_CITY_NOT_LIVE_CITY',
-        'ENCODED_REG_CITY_NOT_WORK_CITY',
-        'ENCODED_LIVE_CITY_NOT_WORK_CITY',
-        'ENCODED_ORGANIZATION_TYPE',
-        'ENCODED_FONDKAPREMONT_MODE',
-        'ENCODED_HOUSETYPE_MODE',
-        'ENCODED_WALLSMATERIAL_MODE',
-        'ENCODED_EMERGENCYSTATE_MODE',
-        'ENCODED_NAME_CONTRACT_TYPE',
+        # 'ENCODED_CODE_GENDER',
+        # 'ENCODED_FLAG_OWN_CAR',
+        # 'ENCODED_FLAG_OWN_REALTY',
+        # 'ENCODED_NAME_TYPE_SUITE',
+        # 'ENCODED_NAME_INCOME_TYPE',
+        # 'ENCODED_NAME_EDUCATION_TYPE',
+        # 'ENCODED_NAME_FAMILY_STATUS',
+        # 'ENCODED_NAME_HOUSING_TYPE',
+        # 'ENCODED_FLAG_MOBIL',
+        # 'ENCODED_FLAG_EMP_PHONE',
+        # 'ENCODED_FLAG_WORK_PHONE',
+        # 'ENCODED_FLAG_CONT_MOBILE',
+        # 'ENCODED_FLAG_PHONE',
+        # 'ENCODED_FLAG_EMAIL',
+        # 'ENCODED_OCCUPATION_TYPE',
+        # 'ENCODED_WEEKDAY_APPR_PROCESS_START',
+        # 'ENCODED_HOUR_APPR_PROCESS_START',
+        # 'ENCODED_REG_REGION_NOT_LIVE_REGION',
+        # 'ENCODED_REG_REGION_NOT_WORK_REGION',
+        # 'ENCODED_LIVE_REGION_NOT_WORK_REGION',
+        # 'ENCODED_REG_CITY_NOT_LIVE_CITY',
+        # 'ENCODED_REG_CITY_NOT_WORK_CITY',
+        # 'ENCODED_LIVE_CITY_NOT_WORK_CITY',
+        # 'ENCODED_ORGANIZATION_TYPE',
+        # 'ENCODED_FONDKAPREMONT_MODE',
+        # 'ENCODED_HOUSETYPE_MODE',
+        # 'ENCODED_WALLSMATERIAL_MODE',
+        # 'ENCODED_EMERGENCYSTATE_MODE',
+        # 'ENCODED_NAME_CONTRACT_TYPE',
     ]
+
+    df, test_df, features = preprocess_application(df, test_df, features)
 
     cat_feature = [
         # 'CODE_GENDER',   # Gender of the client

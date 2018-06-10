@@ -1,16 +1,7 @@
 import numpy as np
 import pandas as pd
+from utility import one_hot_encoder
 pd.set_option("display.max_columns", 100)
-
-
-def one_hot_encoder(df):
-    original_columns = list(df.columns)
-    categorical_columns = [
-        col for col in df.columns if df[col].dtype == 'object']
-    df = pd.get_dummies(
-        df, columns=categorical_columns, dummy_na=True)
-    new_columns = [c for c in df.columns if c not in original_columns]
-    return df, new_columns
 
 
 def preprocess_application(train_df, test_df):

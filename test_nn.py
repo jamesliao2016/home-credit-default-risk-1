@@ -23,6 +23,7 @@ def _create_df(n):
     df = pd.DataFrame(index=np.arange(n))
     df['A'] = _create_doc_feature('a', n)
     df['B'] = _create_doc_feature('b', n)
+    df.loc[:50, 'B'] = np.NaN
     df['C'] = np.random.randn(n)
     df['D'] = np.random.randn(n)
     df.loc[:50, 'D'] = np.NaN

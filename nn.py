@@ -18,6 +18,9 @@ def create_model_and_datasets(train_df, test_df, target):
     test_datasets = {}
     num_categories = {}
     for c in categorical_columns:
+        df.loc[pd.isnull(df[c]), c] = ''
+        train_df.loc[pd.isnull(train_df[c]), c] = ''
+        test_df.loc[pd.isnull(test_df[c]), c] = ''
         vectorizer = CountVectorizer()
         vectorizer.fit(df[c])
         train_datasets[c] = vectorizer.transform(train_df[c]).todense()

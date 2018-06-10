@@ -34,6 +34,8 @@ def create_model_and_datasets(train_df, test_df, target):
         vmin = df[c].min()
         vmax = df[c].max()
         v = vmin - 2*(vmax-vmin)
+        if pd.isnull(v):
+            v = 0
         df.loc[pd.isnull(df[c]), c] = v
         train_df.loc[pd.isnull(train_df[c]), c] = v
         test_df.loc[pd.isnull(test_df[c]), c] = v

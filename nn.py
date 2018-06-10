@@ -1,14 +1,18 @@
 import numpy as np
 import pandas as pd
+import chainer
 import chainer.links as L
 import chainer.functions as F
-from chainer import Chain
+from chainer import Chain, cuda
 from chainer.datasets import DictDataset
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import roc_auc_score
 
 
 def create_model_and_datasets(train_df, test_df, target):
+    train_df = train_df.copy()
+    test_df = test_df.copy()
     t = train_df.pop(target).values.reshape((-1, 1))
     test_df.pop(target)
     df = pd.concat([train_df, test_df], axis=0)
@@ -64,11 +68,14 @@ class NN(Chain):
         self.num_numeric = num_numeric
         with self.init_scope():
             for c, num_category in num_categories.items():
-                out_size = min(10, num_category // 2)
+                out_size = min(20, num_category // 2)
                 name = 'embed_{}'.format(c)
                 setattr(self, name, L.Linear(num_category, out_size))
-            self.l1 = L.Linear(num_numeric, 100)
-            self.l2 = L.Linear(None, 1)
+            self.l1 = L.Linear(None, 1000)
+            self.bn1 = L.BatchNormalization(1000)
+            self.l2 = L.Linear(None, 1000)
+            self.bn2 = L.BatchNormalization(1000)
+            self.l3 = L.Linear(None, 1)
 
     def __call__(self, **X):
         h1 = []
@@ -80,10 +87,22 @@ class NN(Chain):
 
         if self.num_numeric > 0:
             x = X['numeric']
-            h1.append(self.l1(x))
+            h1.append(x)
 
-        h1 = F.relu(F.concat(h1, axis=1))
-        y = F.sigmoid(self.l2(h1))
-        loss = F.sigmoid_cross_entropy(y, X['target'])
+        h1 = F.concat(h1, axis=1)
+        h1 = self.l1(h1)
+        h1 = F.relu(h1)
+        h1 = self.bn1(h1)
+        h2 = self.l2(h1)
+        h2 = F.relu(h2)
+        h2 = self.bn2(h2)
+        y = self.l3(h2)
+        t = X['target']
+        loss = F.sigmoid_cross_entropy(y, t)
+        a = cuda.to_cpu(t).reshape(-1)
+        b = cuda.to_cpu(y.array).reshape(-1)
+        score = roc_auc_score(a, b)
+        chainer.report({'loss': loss}, self)
+        chainer.report({'score': score}, self)
 
         return loss

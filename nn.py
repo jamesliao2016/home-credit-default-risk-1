@@ -91,11 +91,13 @@ class NN(Chain):
 
         h1 = F.concat(h1, axis=1)
         h1 = self.l1(h1)
-        h1 = F.relu(h1)
         h1 = self.bn1(h1)
+        h1 = F.dropout(h1, 0.1)
+        h1 = F.relu(h1)
         h2 = self.l2(h1)
-        h2 = F.relu(h2)
         h2 = self.bn2(h2)
+        h2 = F.dropout(h2, 0.1)
+        h2 = F.relu(h2)
         y = self.l3(h2)
         t = X['target']
         loss = F.sigmoid_cross_entropy(y, t)

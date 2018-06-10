@@ -567,39 +567,6 @@ def join_inst_df(df, test_df, inst_df, features):
     return df, test_df, features
 
 
-def one_hot_encoder(df, nan_as_category=True):
-    original_columns = list(df.columns)
-    categorical_columns = [
-        col for col in df.columns if df[col].dtype == 'object']
-    df = pd.get_dummies(
-        df, columns=categorical_columns, dummy_na=nan_as_category)
-    new_columns = [c for c in df.columns if c not in original_columns]
-    return df, new_columns
-
-
-def preprocess_application(train_df, test_df, features):
-    df = train_df.append(test_df).reset_index()
-    # from jsaguiar/lightgbm-with-simple-features-0-785-lb
-    for f in ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY']:
-        df[f], uniques = pd.factorize(df[f])
-    df, cat_cols = one_hot_encoder(df)
-    features += cat_cols
-    # NaN values for DAYS_EMPLOYED: 365.243 -> nan
-    df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
-    # Some simple new features (percentages)
-    df['DAYS_EMPLOYED_PERC'] = df['DAYS_EMPLOYED'] / df['DAYS_BIRTH']
-    df['INCOME_CREDIT_PERC'] = df['AMT_INCOME_TOTAL'] / df['AMT_CREDIT']
-    df['INCOME_PER_PERSON'] = df['AMT_INCOME_TOTAL'] / df['CNT_FAM_MEMBERS']
-    df['ANNUITY_INCOME_PERC'] = df['AMT_ANNUITY'] / df['AMT_INCOME_TOTAL']
-    features += [
-        'DAYS_EMPLOYED_PERC',
-        'INCOME_CREDIT_PERC',
-        'INCOME_PER_PERSON',
-        'ANNUITY_INCOME_PERC',
-    ]
-    return df[:len(train_df)], df[len(train_df):], features
-
-
 def train(
     df, test_df, pos_df, credit_df, prev_df, inst_df,
     bure_df, bbal_df,
@@ -617,137 +584,11 @@ def train(
     sk_id_bure = bure_df['SK_ID_BUREAU'].unique()
     bbal_df = bbal_df[bbal_df['SK_ID_BUREAU'].isin(sk_id_bure)].reset_index()
 
-    features = [
-        'EXT_SOURCE_1',
-        'EXT_SOURCE_2',
-        'EXT_SOURCE_3',
-        'CNT_CHILDREN',
-        'AMT_INCOME_TOTAL',
-        'AMT_CREDIT',
-        'AMT_ANNUITY',
-        'AMT_GOODS_PRICE',  # For consumer loans it is the price of the goods for which the loan is given  # noqa
-        'REGION_POPULATION_RELATIVE',
-        'DAYS_BIRTH',   # Client's age in days at the time of application,time only relative to the application  # noqa
-        'DAYS_EMPLOYED',  # How many days before the application the person started current employment,time only relative to the application  # noqa
-        'DAYS_REGISTRATION',
-        'DAYS_ID_PUBLISH',   # How many days before the application did client change the identity document with which he applied for the loan,time only relative to the application # noqa
-        'CNT_FAM_MEMBERS',
-        'REGION_RATING_CLIENT',
-        'REGION_RATING_CLIENT_W_CITY',
-        'APARTMENTS_AVG',
-        'BASEMENTAREA_AVG',
-        'YEARS_BEGINEXPLUATATION_AVG',
-        'YEARS_BUILD_AVG',
-        'COMMONAREA_AVG',
-        'ELEVATORS_AVG',
-        'ENTRANCES_AVG',
-        'FLOORSMAX_AVG',
-        'FLOORSMIN_AVG',
-        'LANDAREA_AVG',
-        'LIVINGAPARTMENTS_AVG',
-        'LIVINGAREA_AVG',
-        'NONLIVINGAPARTMENTS_AVG',
-        'NONLIVINGAREA_AVG',
-        'APARTMENTS_MODE',
-        'BASEMENTAREA_MODE',
-        'YEARS_BEGINEXPLUATATION_MODE',
-        'YEARS_BUILD_MODE',
-        'COMMONAREA_MODE',
-        'ELEVATORS_MODE',
-        'ENTRANCES_MODE',
-        'FLOORSMAX_MODE',
-        'FLOORSMIN_MODE',
-        'LANDAREA_MODE',
-        'LIVINGAPARTMENTS_MODE',
-        'LIVINGAREA_MODE',
-        'NONLIVINGAPARTMENTS_MODE',
-        'NONLIVINGAREA_MODE',
-        'APARTMENTS_MEDI',
-        'BASEMENTAREA_MEDI',
-        'YEARS_BEGINEXPLUATATION_MEDI',
-        'YEARS_BUILD_MEDI',
-        'COMMONAREA_MEDI',
-        'ELEVATORS_MEDI',
-        'ENTRANCES_MEDI',
-        'FLOORSMAX_MEDI',
-        'FLOORSMIN_MEDI',
-        'LANDAREA_MEDI',
-        'LIVINGAPARTMENTS_MEDI',
-        'LIVINGAREA_MEDI',
-        'NONLIVINGAPARTMENTS_MEDI',
-        'NONLIVINGAREA_MEDI',
-        'TOTALAREA_MODE',
-        'OBS_30_CNT_SOCIAL_CIRCLE',
-        'DEF_30_CNT_SOCIAL_CIRCLE',
-        'OBS_60_CNT_SOCIAL_CIRCLE',
-        'DEF_60_CNT_SOCIAL_CIRCLE',
-        'DAYS_LAST_PHONE_CHANGE',
-        'OWN_CAR_AGE',  # Age of client's car,
-        # encoded
-        # 'ENCODED_CODE_GENDER',
-        # 'ENCODED_FLAG_OWN_CAR',
-        # 'ENCODED_FLAG_OWN_REALTY',
-        # 'ENCODED_NAME_TYPE_SUITE',
-        # 'ENCODED_NAME_INCOME_TYPE',
-        # 'ENCODED_NAME_EDUCATION_TYPE',
-        # 'ENCODED_NAME_FAMILY_STATUS',
-        # 'ENCODED_NAME_HOUSING_TYPE',
-        # 'ENCODED_FLAG_MOBIL',
-        # 'ENCODED_FLAG_EMP_PHONE',
-        # 'ENCODED_FLAG_WORK_PHONE',
-        # 'ENCODED_FLAG_CONT_MOBILE',
-        # 'ENCODED_FLAG_PHONE',
-        # 'ENCODED_FLAG_EMAIL',
-        # 'ENCODED_OCCUPATION_TYPE',
-        # 'ENCODED_WEEKDAY_APPR_PROCESS_START',
-        # 'ENCODED_HOUR_APPR_PROCESS_START',
-        # 'ENCODED_REG_REGION_NOT_LIVE_REGION',
-        # 'ENCODED_REG_REGION_NOT_WORK_REGION',
-        # 'ENCODED_LIVE_REGION_NOT_WORK_REGION',
-        # 'ENCODED_REG_CITY_NOT_LIVE_CITY',
-        # 'ENCODED_REG_CITY_NOT_WORK_CITY',
-        # 'ENCODED_LIVE_CITY_NOT_WORK_CITY',
-        # 'ENCODED_ORGANIZATION_TYPE',
-        # 'ENCODED_FONDKAPREMONT_MODE',
-        # 'ENCODED_HOUSETYPE_MODE',
-        # 'ENCODED_WALLSMATERIAL_MODE',
-        # 'ENCODED_EMERGENCYSTATE_MODE',
-        # 'ENCODED_NAME_CONTRACT_TYPE',
-    ]
+    features = df.columns.values.tolist()
+    features.remove('SK_ID_CURR')
+    features.remove('TARGET')
 
-    df, test_df, features = preprocess_application(df, test_df, features)
-
-    cat_feature = [
-        # 'CODE_GENDER',   # Gender of the client
-        # 'FLAG_OWN_CAR',
-        # 'FLAG_OWN_REALTY',
-        # 'NAME_TYPE_SUITE',
-        # 'NAME_INCOME_TYPE',
-        # 'NAME_EDUCATION_TYPE',  # Level of highest education the client achieved,  # noqa
-        # 'NAME_FAMILY_STATUS',
-        # 'NAME_HOUSING_TYPE',
-        # 'FLAG_MOBIL',
-        # 'FLAG_EMP_PHONE',
-        # 'FLAG_WORK_PHONE',
-        # 'FLAG_CONT_MOBILE',
-        # 'FLAG_PHONE',
-        # 'FLAG_EMAIL',
-        # 'OCCUPATION_TYPE',
-        # 'WEEKDAY_APPR_PROCESS_START',
-        # 'HOUR_APPR_PROCESS_START',
-        # 'REG_REGION_NOT_LIVE_REGION',
-        # 'REG_REGION_NOT_WORK_REGION',
-        # 'LIVE_REGION_NOT_WORK_REGION',
-        # 'REG_CITY_NOT_LIVE_CITY',
-        # 'REG_CITY_NOT_WORK_CITY',
-        # 'LIVE_CITY_NOT_WORK_CITY',
-        # # 'ORGANIZATION_TYPE',
-        # 'FONDKAPREMONT_MODE',
-        # 'HOUSETYPE_MODE',
-        # 'WALLSMATERIAL_MODE',
-        # 'EMERGENCYSTATE_MODE',
-        # 'NAME_CONTRACT_TYPE',  # Identification if loan is cash or revolving,
-    ]
+    cat_feature = []
 
     # POS
     df, test_df, features = join_pos_df(df, test_df, pos_df, features)
@@ -864,7 +705,7 @@ def main():
     validate = True
     print('validate: {}'.format(validate))
     print('load data...')
-    df = pd.read_feather('./data/application_train.csv.encoded.feather')
+    df = pd.read_feather('./data/application_train.preprocessed.feather')
     print('n_train: {}'.format(len(df)))
     pos_df = pd.read_feather('./data/POS_CASH_balance.csv.encoded.feather')
     credit_df = pd.read_feather('./data/credit_card_balance.csv.feather')
@@ -882,7 +723,7 @@ def main():
     else:
         n_bagging = 5
         test_df = pd.read_feather(
-            './data/application_test.csv.encoded.feather')
+            './data/application_test.preprocessed.feather')
         print('n_test: {}'.format(len(test_df)))
 
     importance_summay = defaultdict(lambda: 0)

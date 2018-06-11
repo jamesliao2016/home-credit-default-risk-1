@@ -2,10 +2,27 @@ import numpy as np
 import pandas as pd
 from utility import one_hot_encoder
 pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 100)
 
 
-def preprocess_application(train_df, test_df):
+def split_org_type(df):
+    def f(d):
+        d = d.lower()
+        d = d.replace(': ', ' ')
+        d = d.split(' type ')
+        m = d[0]
+        t = '1' if len(d) == 1 else d[1]
+        return m, t
+    tmp = df['ORGANIZATION_TYPE'].apply(f)
+    df['ORGANIZATION_TYPE_MAJOR'] = tmp.apply(lambda d: d[0])
+    df['ORGANIZATION_TYPE_MINOR'] = tmp.apply(lambda d: d[1])
+
+
+def preprocess_application():
+    train_df = pd.read_feather('./data/application_train.feather')
+    test_df = pd.read_feather('./data/application_test.feather')
     df = train_df.append(test_df).reset_index(drop=True)
+    split_org_type(df)
     # from jsaguiar/lightgbm-with-simple-features-0-785-lb
     for f in ['FLAG_OWN_CAR', 'FLAG_OWN_REALTY']:
         df[f], uniques = pd.factorize(df[f])
@@ -22,9 +39,7 @@ def preprocess_application(train_df, test_df):
 
 
 def main():
-    train_df = pd.read_feather('./data/application_train.csv.feather')
-    test_df = pd.read_feather('./data/application_test.csv.feather')
-    train_df, test_df = preprocess_application(train_df, test_df)
+    train_df, test_df = preprocess_application()
     train_df.to_feather('./data/application_train.preprocessed.feather')
     test_df.to_feather('./data/application_test.preprocessed.feather')
 

@@ -442,6 +442,8 @@ def main():
             auc_summary.append(roc_auc_score(
                 test_df['TARGET'], test_df['PRED_{}'.format(i)]
             ))
+            test_df[['SK_ID_CURR', 'TARGET', 'PRED_{}'.format(i)]].to_feather(
+                './data/validation.result.{}.feather'.format(i))
 
     auc_summary = np.array(auc_summary)
 

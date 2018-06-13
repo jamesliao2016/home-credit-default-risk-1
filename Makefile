@@ -14,3 +14,9 @@ $(DSTS): %.feather: %.csv.zip
 
 $(APP_PREP_DSTS): $(DSTS)
 	python preprocess_application.py
+
+data/bureau_balance.preprocessed.feather: data/bureau_balance.feather preprocess_bb.py
+	python preprocess_bb.py
+
+data/bureau_balance.agg.feather: data/bureau_balance.preprocessed.feather aggregate_bb.py
+	python aggregate_bb.py

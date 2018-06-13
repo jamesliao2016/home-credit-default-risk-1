@@ -354,8 +354,8 @@ def train(
         'min_child_weight': 2,
         'subsample_for_bin': 10000000,
         'min_split_gain': 0.01,
-        'reg_alpha': 0.001,
-        'reg_lambda': 0.001,
+        'reg_alpha': 0.02,
+        'reg_lambda': 0.02,
         'nthread': 12,
         'verbose': 0,
     }

@@ -96,18 +96,10 @@ def create_new_features(bure_df):
     return res
 
 
-def preprocess_bureau_and_balance(bure_df, bb_df):
-    bb_df, bb_cat = one_hot_encoder(bb_df)
+def preprocess_bureau_and_balance(bure_df, bb_agg):
     bure_df, bureau_cat = one_hot_encoder(bure_df)
 
-    # Bureau balance: Perform aggregations and merge with bureau.csv
-    bb_aggregations = {'MONTHS_BALANCE': ['min', 'max', 'size']}
-    for col in bb_cat:
-        bb_aggregations[col] = ['mean']
-    bb_agg = bb_df.groupby('SK_ID_BUREAU').agg(bb_aggregations)
-    bb_agg.columns = [
-        a + "_" + b.upper() for a, b in bb_agg.columns.tolist()]
-    bure_df = bure_df.join(bb_agg, how='left', on='SK_ID_BUREAU')
+    bure_df = bure_df.merge(bb_agg, how='left', on='SK_ID_BUREAU')
     bure_df.drop(columns='SK_ID_BUREAU', inplace=True)
 
     # Bureau and bureau_balance numeric features
@@ -123,16 +115,20 @@ def preprocess_bureau_and_balance(bure_df, bb_df):
         'AMT_CREDIT_SUM_LIMIT': ['mean', 'sum'],
         'DAYS_CREDIT_UPDATE': ['min', 'max', 'mean'],
         'AMT_ANNUITY': ['max', 'mean'],
-        'MONTHS_BALANCE_MIN': ['min'],
-        'MONTHS_BALANCE_MAX': ['max'],
-        'MONTHS_BALANCE_SIZE': ['mean', 'sum']
+        'BB_MONTHS_BALANCE_MIN': ['min'],
+        'BB_MONTHS_BALANCE_MAX': ['max'],
+        'BB_MONTHS_BALANCE_COUNT': ['mean', 'sum'],
+        'BB_TERM': ['min', 'max', 'mean', 'sum'],
     }
+    for c in bb_agg.columns:
+        if c == 'SK_ID_BUREAU' or c in num_aggregations:
+            continue
+        num_aggregations[c] = ['mean']
+
     # Bureau and bureau_balance categorical features
     cat_aggregations = {}
     for cat in bureau_cat:
         cat_aggregations[cat] = ['mean']
-    for cat in bb_cat:
-        cat_aggregations[cat + "_MEAN"] = ['mean']
 
     bureau_agg = bure_df.groupby(
         'SK_ID_CURR').agg({**num_aggregations, **cat_aggregations})
@@ -155,16 +151,16 @@ def preprocess_bureau_and_balance(bure_df, bb_df):
 
 
 def main():
-    bure_df = pd.read_feather('./data/bureau.csv.feather')
-    bb_df = pd.read_feather('./data/bureau_balance.csv.feather')
-    bure_agg = preprocess_bureau_and_balance(bure_df, bb_df)
+    bure_df = pd.read_feather('./data/bureau.feather')
+    bb_agg = pd.read_feather('./data/bureau_balance.agg.feather')
+    bure_agg = preprocess_bureau_and_balance(bure_df, bb_agg)
     res = create_new_features(bure_df)
     res = res.merge(bure_agg, how='left', on='SK_ID_CURR')
     res = res.set_index('SK_ID_CURR')
     res.columns = [
         'BURE_{}'.format(c) for c in res.columns]
     res = res.reset_index()
-    res.to_feather('./data/preprocessed_bureau.csv.feather')
+    res.to_feather('data/bureau.agg.feather')
 
 
 if __name__ == '__main__':

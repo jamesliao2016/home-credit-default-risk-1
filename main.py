@@ -122,7 +122,7 @@ def join_credit_df(df, test_df, orig_credit_df, features, cat_features):
     features += tmp.columns.tolist()
     del tmp
 
-    tmp = pd.read_feather('./data/preprocessed_credit_balance.csv.feather')
+    tmp = pd.read_feather('./data/credit_balance.agg.feather')
     df = df.merge(tmp, on='SK_ID_CURR', how='left')
     test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
     features += tmp.columns.tolist()

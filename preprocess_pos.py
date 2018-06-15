@@ -22,7 +22,7 @@ def preprocess_pos():
     df = pd.read_feather('./data/POS_CASH_balance.feather')
     df = df.sort_values(['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE'])
     df = create_diff(df)
-    return df.reset_index()
+    return df.reset_index(drop=True)
 
 
 def main():

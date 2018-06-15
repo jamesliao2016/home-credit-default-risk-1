@@ -89,7 +89,7 @@ def main():
     res.columns = [
         'PREV_{}'.format(c.replace(' ', '_')) for c in res.columns]
     res = res.reset_index()
-    res.to_feather('./data/previous_application.preprocessed.feather')
+    res.to_feather('./data/previous_application.agg.feather')
 
 
 if __name__ == '__main__':

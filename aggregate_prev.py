@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from utility import one_hot_encoder
 pd.set_option("display.max_columns", 100)
@@ -32,15 +31,7 @@ def create_new_features(prev_df):
 
 def preprocess_prev(prev_df):
     prev_df, cat_cols = one_hot_encoder(prev_df)
-    # Days 365.243 values -> nan
-    prev_df['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace=True)
-    prev_df['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace=True)
-    prev_df['DAYS_LAST_DUE_1ST_VERSION'].replace(365243, np.nan, inplace=True)
-    prev_df['DAYS_LAST_DUE'].replace(365243, np.nan, inplace=True)
-    prev_df['DAYS_TERMINATION'].replace(365243, np.nan, inplace=True)
-    # Add feature: value ask / value received percentage
-    prev_df[
-        'APP_CREDIT_PERC'] = prev_df['AMT_APPLICATION'] / prev_df['AMT_CREDIT']
+
     # Previous applications numeric features
     num_aggregations = {
         'AMT_ANNUITY': ['min', 'max', 'mean'],
@@ -80,7 +71,8 @@ def preprocess_prev(prev_df):
 
 
 def main():
-    prev_df = pd.read_feather('./data/previous_application.csv.feather')
+    prev_df = pd.read_feather(
+        './data/previous_application.preprocessed.feather')
     prev_df = prev_df.sort_values('SK_ID_CURR')
     prev_agg = preprocess_prev(prev_df)
     res = create_new_features(prev_df)

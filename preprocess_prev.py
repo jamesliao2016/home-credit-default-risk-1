@@ -6,7 +6,8 @@ pd.set_option("display.width", 180)
 
 def preprocess_prev():
     pre_df = pd.read_feather('./data/previous_application.feather')
-    pre_df = pre_df.sort_values(['SK_ID_CURR', 'SK_ID_PREV'])
+    pre_df = pre_df.sort_values(
+        ['SK_ID_CURR', 'SK_ID_PREV']).reset_index(drop=True)
 
     # Days 365.243 values -> nan
     pre_df['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace=True)

@@ -31,11 +31,11 @@ def aggregate_credit():
     grp = cred_df.groupby(key)
     g = grp[['MONTHS_BALANCE']].count()
     g.columns = ['COUNT']
-    cred_agg = g.reset_index()
+    cred_agg = g
 
     g = grp[['CNT_INSTALMENT_MATURE_CUM']].max()
     g.columns = ['MAX_CNT_INSTALMENT']
-    cred_agg = cred_agg.merge(g, on=key, how='left')
+    cred_agg = cred_agg.join(g, on=key, how='left')
     cred_agg['MAX_RATIO_INSTALMENT'] =\
         cred_agg['MAX_CNT_INSTALMENT'] / cred_agg['COUNT']
 
@@ -80,20 +80,18 @@ def aggregate_credit():
     }
     g = grp.agg(agg)
     g.columns = ['{}_{}'.format(a.upper(), b) for a, b in g.columns]
-    cred_agg = cred_agg.merge(g, on=key, how='left')
+    cred_agg = cred_agg.join(g, on=key, how='left')
     # TODO: diff by max-min
     # TODO: handle NAME_CONTRACT_STATUS
+    cred_agg.columns = [
+        'CRED_{}'.format(c) for c in cred_agg.columns]
 
-    return cred_agg
+    return cred_agg.reset_index()
 
 
 def main():
     cred_agg = aggregate_credit()
-    cred_agg = cred_agg.set_index('SK_ID_CURR')
-    cred_agg.columns = [
-        'CRED_{}'.format(c) for c in cred_agg.columns]
-    cred_agg = cred_agg.reset_index()
-    cred_agg.to_feather('./data/credit_balance.agg.feather')
+    cred_agg.to_feather('./data/credit_card_balance.agg.feather')
 
 
 if __name__ == '__main__':

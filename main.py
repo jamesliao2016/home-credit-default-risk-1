@@ -235,7 +235,7 @@ def join_credit_df(df, test_df, orig_credit_df, features, cat_features):
 def join_prev_df(df, test_df, features):
     # preprocessed
     tmp = pd.read_feather(
-        './data/previous_application.preprocessed.feather')
+        './data/previous_application.agg.feather')
     df = df.merge(tmp, on='SK_ID_CURR', how='left')
     test_df = test_df.merge(tmp, on='SK_ID_CURR', how='left')
     features += tmp.columns.tolist()
@@ -292,14 +292,14 @@ def train(
     cat_feature = []
 
     # POS
-    df, test_df, features = join_pos_df(df, test_df, pos_df, features)
+    # df, test_df, features = join_pos_df(df, test_df, pos_df, features)
 
     # credit bureau
     df, test_df, features = join_bure_df(df, test_df, features)
 
     # credit card
-    df, test_df, features, cat_feature = join_credit_df(
-        df, test_df, credit_df, features, cat_feature)
+    # df, test_df, features, cat_feature = join_credit_df(
+    #     df, test_df, credit_df, features, cat_feature)
 
     # prev_df
     df, test_df, features = join_prev_df(df, test_df, features)

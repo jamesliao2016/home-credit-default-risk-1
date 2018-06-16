@@ -12,7 +12,7 @@ all: $(APP_PREP_DSTS)
 $(DSTS): %.feather: %.csv.zip
 	python convert.py --src $< --dst $@
 
-$(APP_PREP_DSTS): $(DSTS)
+$(APP_PREP_DSTS): $(DSTS) preprocess_application.py
 	python preprocess_application.py
 
 data/bureau_balance.preprocessed.feather: data/bureau_balance.feather preprocess_bb.py

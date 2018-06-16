@@ -65,7 +65,8 @@ def preprocess_prev():
     approved = pre_df[pre_df['NAME_CONTRACT_STATUS_Approved'] == 1]
     approved_agg = approved.groupby('SK_ID_CURR').agg(agg)
     approved_agg.columns = [
-        'APPROVED_{}_{}'.format(a.upper(), b) for a, b in approved_agg.columns]
+        'APPROVED_{}_{}'.format(
+                a.upper(), b) for a, b in approved_agg.columns]
 
     pre_agg = pre_agg.join(approved_agg, on='SK_ID_CURR', how='left')
 

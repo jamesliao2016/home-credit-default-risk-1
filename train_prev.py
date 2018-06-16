@@ -5,7 +5,7 @@ import lightgbm as lgb
 # from datetime import datetime
 from collections import defaultdict
 from sklearn.metrics import roc_auc_score
-from utility import one_hot_encoder
+from utility import one_hot_encoder, split_train
 pd.set_option("display.max_columns", 500)
 
 
@@ -176,7 +176,7 @@ def main():
         src = './data/application_train.split.{}.feather'.format(i)
         df = pd.read_feather(src)
         if validate:
-            train_df, test_df = split(df)
+            train_df, test_df = split_train(df)
         else:
             train_df = df
 

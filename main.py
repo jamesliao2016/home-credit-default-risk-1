@@ -447,7 +447,8 @@ def main():
 
     auc_summary = np.array(auc_summary)
 
-    for key, value in sorted(importance_summay.items(), key=lambda x: -x[1]):
+    importances = list(sorted(importance_summay.items(), key=lambda x: -x[1]))
+    for key, value in importances[:500]:
         print('{} {}'.format(key, value))
 
     if validate:

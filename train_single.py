@@ -1,5 +1,6 @@
 import os
 import gc
+import argparse
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -201,10 +202,15 @@ def train(idx, validate, importance_summay):
 def main():
     np.random.seed(215)
     now = datetime.now().strftime('%m%d-%H%M')
-    validate = False
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--validate', action='store_true')
+    args = parser.parse_args()
+
+    validate = args.validate
     print('validate: {}'.format(validate))
     if validate:
-        n_bagging = 2
+        n_bagging = 3
     else:
         n_bagging = 11
     importance_summay = defaultdict(lambda: 0)
@@ -232,7 +238,6 @@ def main():
         res['TARGET'] = 0
         for df in results:
             df = df.set_index('SK_ID_CURR')
-            print(df.head())
             res['TARGET'] += df['PRED']
         res['TARGET'] /= res['TARGET'].max()
         res = res.reset_index()

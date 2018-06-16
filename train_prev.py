@@ -1,3 +1,4 @@
+import gc
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -5,6 +6,7 @@ import lightgbm as lgb
 from collections import defaultdict
 from sklearn.metrics import roc_auc_score
 from utility import one_hot_encoder
+pd.set_option("display.max_columns", 500)
 
 
 def split(df):
@@ -23,8 +25,9 @@ def split(df):
 
 def join_prev(df, test_df):
     key = ['SK_ID_CURR']
-    pre_df = pd.read_feather('./data/previous_application.joined.feather')
-    pre_df = pre_df.set_index('SK_ID_CURR')
+    pre_df = pd.read_feather(
+        './data/previous_application.joined.feather')
+    pre_df = pre_df.set_index(['SK_ID_CURR', 'SK_ID_PREV'])
     pre_df.columns = ['PREV_{}'.format(c) for c in pre_df.columns]
     pre_df = pre_df.reset_index()
     df = df.merge(pre_df, on=key, how='left')
@@ -33,11 +36,28 @@ def join_prev(df, test_df):
     return df, test_df
 
 
+def join_inst(df, test_df):
+    key = ['SK_ID_CURR', 'SK_ID_PREV']
+    ins_df = pd.read_feather(
+        './data/installments_payments.agg.feather')
+    df = df.merge(ins_df, on=key, how='left')
+    test_df = test_df.merge(ins_df, on=key, how='left')
+
+    return df, test_df
+
+
 def train(train_df, test_df, validate, importance_summay):
+    print('join...')
     train_df, test_df = join_prev(train_df, test_df)
+    gc.collect()
+    train_df, test_df = join_inst(train_df, test_df)
+    gc.collect()
 
     n_train = len(train_df)
     df = pd.concat([train_df, test_df]).reset_index(drop=True)
+    del train_df
+    del test_df
+    gc.collect()
     df, _ = one_hot_encoder(df)
     test_df = df[n_train:].reset_index(drop=True)
     train_df = df[:n_train].reset_index(drop=True)
@@ -53,8 +73,7 @@ def train(train_df, test_df, validate, importance_summay):
         train_df = train_df[:n_train]
 
     features = train_df.columns.values.tolist()
-    print(features)
-    for t in ['SK_ID_CURR', 'SK_ID_PREV', 'TARGET']:
+    for t in ['SK_ID_CURR', 'SK_ID_PREV', 'TARGET', 'index']:
         while t in features:
             features.remove(t)
 
@@ -119,9 +138,6 @@ def main():
     # now = datetime.now().strftime('%m%d-%H%M')
     validate = True
     print('validate: {}'.format(validate))
-    print('load data...')
-    df = pd.read_feather('./data/application_train.preprocessed.feather')
-    print('n_train: {}'.format(len(df)))
 
     if validate:
         pass
@@ -129,27 +145,30 @@ def main():
         test_df = pd.read_feather(
             './data/application_test.preprocessed.feather')
 
-    if validate:
-        train_df, test_df = split(df)
-    else:
-        train_df = df
-    pos_train_df = train_df[train_df['TARGET'] == 1]
-    neg_train_df = train_df[train_df['TARGET'] == 0]
-    n_pos = len(pos_train_df)
-    print('n_pos: {}'.format(n_pos))
-    neg_part_train_df = neg_train_df.sample(n=n_pos)
-    part_df = pd.concat([pos_train_df, neg_part_train_df])
-    part_df = part_df.sample(frac=1)
-
     importance_summay = defaultdict(lambda: 0)
-    res_df = train(
-        part_df, test_df, validate, importance_summay,
-    )
-    res_df = res_df.groupby('SK_ID_CURR')[['PRED']].mean().reset_index()
-    test_df = test_df.merge(res_df, on='SK_ID_CURR', how='left')
-    if validate:
-        score = roc_auc_score(test_df['TARGET'], test_df['PRED'])
-        print('score: {}'.format(score))
+    auc_summary = []
+    for i in range(1):
+        src = './data/application_train.split.{}.feather'.format(i)
+        df = pd.read_feather(src)
+        if validate:
+            train_df, test_df = split(df)
+        else:
+            train_df = df
+
+        res_df = train(
+            train_df, test_df, validate, importance_summay,
+        )
+        res_df = res_df.groupby('SK_ID_CURR')[['PRED']].mean().reset_index()
+        test_df = test_df.merge(res_df, on='SK_ID_CURR', how='left')
+        if validate:
+            score = roc_auc_score(test_df['TARGET'], test_df['PRED'])
+            auc_summary.append(score)
+            print('score: {}'.format(score))
+
+    auc_summary = np.array(auc_summary)
+    importances = list(sorted(importance_summay.items(), key=lambda x: -x[1]))
+    for key, value in importances[:500]:
+        print('{} {}'.format(key, value))
 
 
 if __name__ == '__main__':

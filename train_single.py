@@ -27,7 +27,7 @@ def rename_columns(g, prefix):
 
 
 def train(idx, validate, importance_summay):
-    src = './data/application_train.split.{}.feather'.format(idx)
+    src = './data/application_train.preprocessed.split.{}.feather'.format(idx)
     print('load {}'.format(src))
     train = pd.read_feather(src)
     if validate:
@@ -104,17 +104,6 @@ def train(idx, validate, importance_summay):
     df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
     df = df.merge(sum_pos, on='SK_ID_CURR', how='left')
     df = df.merge(sum_prev, on='SK_ID_CURR', how='left')
-    df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
-    df['DAYS_EMPLOYED_PERC'] = df.DAYS_EMPLOYED / df.DAYS_BIRTH
-    df['INCOME_CREDIT_PERC'] = df.AMT_INCOME_TOTAL / df.AMT_CREDIT
-    df['INCOME_PER_PERSON'] = df.AMT_INCOME_TOTAL / df.CNT_FAM_MEMBERS
-    df['ANNUITY_INCOME_PERC'] = df.AMT_ANNUITY / df.AMT_INCOME_TOTAL
-    df['LOAN_INCOME_RATIO'] = df.AMT_CREDIT / df.AMT_INCOME_TOTAL
-    df['ANNUITY_INCOME_RATIO'] = df.AMT_ANNUITY / df.AMT_INCOME_TOTAL
-    df['ANNUITY_LENGTH'] = df.AMT_CREDIT / df.AMT_ANNUITY
-    df['WORKING_LIFE_RATIO'] = df.DAYS_EMPLOYED / df.DAYS_BIRTH
-    df['INCOME_PER_FAM'] = df.AMT_INCOME_TOTAL / df.CNT_FAM_MEMBERS
-    df['CHILDREN_RATIO'] = df.CNT_CHILDREN / df.CNT_FAM_MEMBERS
 
     # TODO: mutate(na = apply(., 1, function(x) sum(is.na(x))),
     # TODO: mutate_all(funs(ifelse(is.nan(.), NA, .))) %>%

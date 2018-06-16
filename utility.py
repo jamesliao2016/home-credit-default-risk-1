@@ -10,9 +10,9 @@ def split_train(df):
     n_pos_train = int(0.85*n_pos)
     n_neg_train = int(0.85*n_neg)
     train_df = pd.concat([pos_df[:n_pos_train], neg_df[:n_neg_train]])
-    train_df = train_df.sample(frac=1).reset_index()
+    train_df = train_df.sample(frac=1).reset_index(drop=True)
     test_df = pd.concat([pos_df[n_pos_train:], neg_df[n_neg_train:]])
-    test_df = test_df.sample(frac=1).reset_index()
+    test_df = test_df.sample(frac=1).reset_index(drop=True)
     return train_df, test_df
 
 

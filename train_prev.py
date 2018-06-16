@@ -23,6 +23,15 @@ def split(df):
     return train_df, test_df
 
 
+def join_bureau(df, test_df):
+    key = ['SK_ID_CURR']
+    bur_df = pd.read_feather('./data/bureau.agg.feather')
+    df = df.merge(bur_df, on=key, how='left')
+    test_df = test_df.merge(bur_df, on=key, how='left')
+
+    return df, test_df
+
+
 def join_prev(df, test_df):
     key = ['SK_ID_CURR']
     pre_df = pd.read_feather(
@@ -47,9 +56,13 @@ def join_inst(df, test_df):
 
 
 def train(train_df, test_df, validate, importance_summay):
-    print('join...')
+    print('join bureau...')
+    train_df, test_df = join_bureau(train_df, test_df)
+    gc.collect()
+    print('join prev...')
     train_df, test_df = join_prev(train_df, test_df)
     gc.collect()
+    print('join inst...')
     train_df, test_df = join_inst(train_df, test_df)
     gc.collect()
 

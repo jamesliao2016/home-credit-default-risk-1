@@ -22,7 +22,6 @@ def preprocess_bureau():
     df = df.sort_values(
         ['SK_ID_CURR', 'DAYS_CREDIT'],
     ).reset_index(drop=True)
-    df = df[:10000]
     df['DAYS_CREDIT_ENDDATE_PLUS'] = (
         df['DAYS_CREDIT_ENDDATE'] >= 0).astype('i')
     df['AMT_CREDIT_SUM'].fillna(0, inplace=True)

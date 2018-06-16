@@ -68,7 +68,8 @@ def train(idx, validate, importance_summay):
         return summarize(bure, 'BURE')
 
     def get_cred():
-        cred = pd.read_feather('./data/credit_card_balance.feather')
+        cred = pd.read_feather(
+            './data/credit_card_balance.preprocessed.feather')
         sum_cred = summarize(cred, 'CRED')
         return sum_cred
 

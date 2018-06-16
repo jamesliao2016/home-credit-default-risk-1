@@ -77,7 +77,7 @@ def train(idx, validate, importance_summay):
         return summarize(inst, 'INST')
 
     def get_pos():
-        pos = pd.read_feather('./data/POS_CASH_balance.feather')
+        pos = pd.read_feather('./data/POS_CASH_balance.preprocessed.feather')
         return summarize(pos, 'POS')
 
     def get_prev():

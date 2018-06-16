@@ -9,25 +9,23 @@ from utility import one_hot_encoder, split_train
 pd.set_option("display.max_columns", 500)
 
 
-def split(df):
-    pos_df = df[df['TARGET'] == 1].sample(frac=1)
-    neg_df = df[df['TARGET'] == 0].sample(frac=1)
-    n_pos = pos_df.shape[0]
-    n_neg = neg_df.shape[0]
-    n_pos_train = int(0.85*n_pos)
-    n_neg_train = int(0.85*n_neg)
-    train_df = pd.concat([pos_df[:n_pos_train], neg_df[:n_neg_train]])
-    train_df = train_df.sample(frac=1).reset_index()
-    test_df = pd.concat([pos_df[n_pos_train:], neg_df[n_neg_train:]])
-    test_df = test_df.sample(frac=1).reset_index()
-    return train_df, test_df
-
-
-def preprocess_bureau(df):
-    df['AMT_CREDIT_SUM'] = df['AMT_CREDIT'] + df['BURE_AMT_CREDIT_SUM_SUM']
-    df['AMT_CREDIT_SUM'].fillna(0, inplace=True)
-    df['AMT_ANNUITY_SUM'] = df['AMT_ANNUITY'] + df['BURE_AMT_ANNUITY_SUM']
-    df['AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+def preprocess(df):
+    df['AMT_CREDIT'].fillna(0, inplace=True)
+    df['BURE_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
+    df['PREV_AMT_CREDIT_SUM'].fillna(0, inplace=True)
+    df['AMT_CREDIT_SUM'] = (
+        df['AMT_CREDIT'] +
+        df['BURE_AMT_CREDIT_SUM_SUM'] +
+        df['PREV_AMT_CREDIT_SUM']
+    )
+    df['AMT_ANNUITY'].fillna(0, inplace=True)
+    df['BURE_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+    df['PREV_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+    df['AMT_ANNUITY_SUM'] = (
+        df['AMT_ANNUITY'] +
+        df['BURE_AMT_ANNUITY_SUM'] +
+        df['PREV_AMT_ANNUITY_SUM']
+    )
     df['RATIO_CREDIT_SUM_TO_ANNUITY_SUM'] =\
         df['AMT_CREDIT_SUM'] / df['AMT_ANNUITY_SUM']
 
@@ -38,7 +36,6 @@ def join_bureau(train_df, test_df):
     def f(df):
         key = ['SK_ID_CURR']
         df = df.merge(bur_df, on=key, how='left')
-        preprocess_bureau(df)
         return df
 
     return f(train_df), f(test_df)
@@ -77,6 +74,9 @@ def train(train_df, test_df, validate, importance_summay):
     print('join inst...')
     train_df, test_df = join_inst(train_df, test_df)
     gc.collect()
+
+    preprocess(train_df)
+    preprocess(test_df)
 
     n_train = len(train_df)
     df = pd.concat([train_df, test_df]).reset_index(drop=True)

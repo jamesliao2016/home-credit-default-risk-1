@@ -4,7 +4,8 @@ pd.set_option("display.max_columns", 100)
 
 
 def preprocess_prev():
-    pre_df = pd.read_feather('./data/previous_application.joined.feather')
+    pre_df = pd.read_feather(
+        './data/previous_application.preprocessed.feather')
 
     # TODO: Move preprocess prev
     pre_df['IS_REFUSED'] =\

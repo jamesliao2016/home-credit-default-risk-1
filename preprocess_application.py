@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
-from utility import one_hot_encoder
-pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_columns", 200)
 pd.set_option("display.max_rows", 100)
+pd.set_option("display.width", 200)
 
 
 def split_org_type(df):
@@ -21,15 +21,12 @@ def split_org_type(df):
 def preprocess_application():
     train_df = pd.read_feather('./data/application_train.feather')
     test_df = pd.read_feather('./data/application_test.feather')
-    df = train_df.append(test_df).reset_index(drop=True)
+    n_train = len(train_df)
+    df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
     split_org_type(df)
-    # from jsaguiar/lightgbm-with-simple-features-0-785-lb
-    for f in ['FLAG_OWN_CAR', 'FLAG_OWN_REALTY']:
-        df[f], uniques = pd.factorize(df[f])
-    df, cat_cols = one_hot_encoder(df)
-    # NaN values for DAYS_EMPLOYED: 365.243 -> nan
+
     df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
-    # Some simple new features (percentages)
+
     df['DAYS_EMPLOYED_PERC'] = df['DAYS_EMPLOYED'] / df['DAYS_BIRTH']
     df['INCOME_CREDIT_PERC'] = df['AMT_INCOME_TOTAL'] / df['AMT_CREDIT']
     df['INCOME_PER_PERSON'] = df['AMT_INCOME_TOTAL'] / df['CNT_FAM_MEMBERS']
@@ -41,7 +38,8 @@ def preprocess_application():
     df['INCOME_PER_FAM'] = df['AMT_INCOME_TOTAL'] / df['CNT_FAM_MEMBERS']
     df['CHILDREN_RATIO'] = df['CNT_CHILDREN'] / df['CNT_FAM_MEMBERS']
     df.columns = [c.replace(' ', '_') for c in df.columns]
-    return df[:len(train_df)].reset_index(), df[len(train_df):].reset_index()
+
+    return df[:n_train].reset_index(), df[n_train:].reset_index()
 
 
 def main():

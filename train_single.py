@@ -73,7 +73,8 @@ def train(idx, validate, importance_summay):
         return sum_cred
 
     def get_inst():
-        inst = pd.read_feather('./data/installments_payments.feather')
+        inst = pd.read_feather(
+            './data/installments_payments.preprocessed.feather')
         return summarize(inst, 'INST')
 
     def get_pos():

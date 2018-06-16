@@ -5,25 +5,11 @@ pd.set_option("display.max_rows", 100)
 pd.set_option("display.width", 200)
 
 
-def split_org_type(df):
-    def f(d):
-        d = d.lower()
-        d = d.replace(': ', ' ')
-        d = d.split(' type ')
-        m = d[0]
-        t = '1' if len(d) == 1 else d[1]
-        return m, t
-    tmp = df['ORGANIZATION_TYPE'].apply(f)
-    df['ORGANIZATION_TYPE_MAJOR'] = tmp.apply(lambda d: d[0])
-    df['ORGANIZATION_TYPE_MINOR'] = tmp.apply(lambda d: d[1])
-
-
 def preprocess_application():
     train_df = pd.read_feather('./data/application_train.feather')
     test_df = pd.read_feather('./data/application_test.feather')
     n_train = len(train_df)
     df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
-    split_org_type(df)
 
     df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
 

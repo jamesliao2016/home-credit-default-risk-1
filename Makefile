@@ -15,8 +15,10 @@ $(DSTS): %.feather: %.csv.zip
 
 SPLITS := $(shell seq 0 10)
 SPLITS := $(addsuffix .feather,$(SPLITS))
-SPLITS := $(addprefix data/application_train.split.,$(SPLITS))
-$(SPLITS): $(APP_PREP_DSTS) split_train.py
+ORIG_SPLITS := $(addprefix data/application_train.split.,$(SPLITS))
+APP := data/application_train.feather data/application_test.feather
+PREP_SPLITS := $(addprefix data/application_train.preprocessed.split.,$(SPLITS))
+$(PREP_SPLITS) $(ORIG_SPLITS): $(APP) $(APP_PREP_DSTS) split_train.py
 	python split_train.py
 
 $(APP_PREP_DSTS): $(DSTS) preprocess_application.py

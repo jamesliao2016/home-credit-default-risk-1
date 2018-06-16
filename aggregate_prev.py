@@ -58,7 +58,7 @@ def preprocess_prev():
         agg[c] = ['mean']
 
     g = grp.agg(agg)
-    g.columns = ['{}_{}'.format(a.upper(), b) for a, b in g.columns]
+    g.columns = [a + "_" + b.upper() for a, b in g.columns]
     pre_agg = pre_agg.join(g, on='SK_ID_CURR', how='left')
 
     # Previous Applications: Approved Applications

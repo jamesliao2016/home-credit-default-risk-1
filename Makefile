@@ -12,6 +12,12 @@ all: $(APP_PREP_DSTS)
 $(DSTS): %.feather: %.csv.zip
 	python convert.py --src $< --dst $@
 
+SPLITS := $(shell seq 0 10)
+SPLITS := $(addsuffix .feather,$(SPLITS))
+SPLITS := $(addprefix data/application_train.split.,$(SPLITS))
+$(SPLITS): $(APP_PREP_DSTS) split_train.py
+	python split_train.py
+
 $(APP_PREP_DSTS): $(DSTS) preprocess_application.py
 	python preprocess_application.py
 

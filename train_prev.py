@@ -23,13 +23,25 @@ def split(df):
     return train_df, test_df
 
 
-def join_bureau(df, test_df):
-    key = ['SK_ID_CURR']
-    bur_df = pd.read_feather('./data/bureau.agg.feather')
-    df = df.merge(bur_df, on=key, how='left')
-    test_df = test_df.merge(bur_df, on=key, how='left')
+def preprocess_bureau(df):
+    df['AMT_CREDIT_SUM'] = df['AMT_CREDIT'] + df['BURE_AMT_CREDIT_SUM_SUM']
+    df['AMT_CREDIT_SUM'].fillna(0, inplace=True)
+    df['AMT_ANNUITY_SUM'] = df['AMT_ANNUITY'] + df['BURE_AMT_ANNUITY_SUM']
+    df['AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+    df['RATIO_CREDIT_SUM_TO_ANNUITY_SUM'] =\
+        df['AMT_CREDIT_SUM'] / df['AMT_ANNUITY_SUM']
 
-    return df, test_df
+
+def join_bureau(train_df, test_df):
+    bur_df = pd.read_feather('./data/bureau.agg.feather')
+
+    def f(df):
+        key = ['SK_ID_CURR']
+        df = df.merge(bur_df, on=key, how='left')
+        preprocess_bureau(df)
+        return df
+
+    return f(train_df), f(test_df)
 
 
 def join_prev(df, test_df):

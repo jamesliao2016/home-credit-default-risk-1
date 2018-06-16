@@ -40,3 +40,7 @@ data/bureau.agg.feather: data/bureau.preprocessed.feather aggregate_bureau.py
 # credit
 data/credit_card_balance.preprocessed.feather: data/credit_card_balance.feather preprocess_credit.py
 	python preprocess_credit.py
+
+# pos
+data/POS_CASH_balance.preprocessed.feather: data/POS_CASH_balance.feather preprocess_pos.py
+	python preprocess_pos.py

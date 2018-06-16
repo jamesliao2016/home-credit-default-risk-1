@@ -39,7 +39,10 @@ def preprocess_application():
     df['CHILDREN_RATIO'] = df['CNT_CHILDREN'] / df['CNT_FAM_MEMBERS']
     df.columns = [c.replace(' ', '_') for c in df.columns]
 
-    return df[:n_train].reset_index(), df[n_train:].reset_index()
+    train_df = df[:n_train].reset_index(drop=True)
+    test_df = df[n_train:].reset_index(drop=True)
+
+    return train_df,  test_df
 
 
 def main():

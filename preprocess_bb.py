@@ -7,7 +7,6 @@ def preprocess_bb():
         'STATUS'].apply(lambda d: d in ['C', '0']).astype('i')
     bb_df['BAD_STATUS'] = bb_df[
         'STATUS'].apply(lambda d: d not in ['C', '0', 'X']).astype('i')
-    bb_df = pd.get_dummies(bb_df, columns=['STATUS'])
     return bb_df
 
 

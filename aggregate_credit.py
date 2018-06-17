@@ -3,12 +3,9 @@
 def aggregate_credit(df, key):
     grp = df.groupby(key)
 
-    # last
-    g = grp.last()
-    g.columns = ['LAST_{}'.format(c) for c in g.columns]
+    g = grp[['MONTHS_BALANCE']].count()
+    g.columns = ['COUNT']
     agg = g
-
-    agg['COUNT'] = grp.size()
 
     fs = ['mean', 'std', 'min', 'max', 'nunique']
     a = {
@@ -60,7 +57,5 @@ def aggregate_credit(df, key):
 
     # TODO: diff by max-min
     # TODO: handle NAME_CONTRACT_STATUS
-    agg.columns = [
-        'CRED_{}'.format(c) for c in agg.columns]
 
-    return agg.reset_index()
+    return agg

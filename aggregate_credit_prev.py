@@ -10,7 +10,17 @@ def aggregate_credit_by_prev_id():
         './data/credit_card_balance.preprocessed.feather')
     df = df.sort_values(['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE'])
 
-    return aggregate_credit(df, ['SK_ID_CURR', 'SK_ID_PREV'])
+    agg = aggregate_credit(df, ['SK_ID_CURR', 'SK_ID_PREV'])
+
+    # last
+    g = df.groupby(['SK_ID_CURR', 'SK_ID_PREV']).last()
+    g.columns = ['LAST_{}'.format(c) for c in g.columns]
+    agg = agg.join(g, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+
+    agg.columns = [
+        'CRED_{}'.format(c) for c in agg.columns]
+
+    return agg.reset_index()
 
 
 def main():

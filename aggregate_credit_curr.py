@@ -11,7 +11,17 @@ def aggregate_credit_by_curr_id():
     del df['SK_ID_PREV']
     df = df.sort_values(['SK_ID_CURR', 'MONTHS_BALANCE'])
 
-    return aggregate_credit(df, ['SK_ID_CURR'])
+    agg = aggregate_credit(df, ['SK_ID_CURR'])
+
+    # last
+    g = df.groupby(['SK_ID_CURR']).last()
+    g.columns = ['LAST_{}'.format(c) for c in g.columns]
+    agg = agg.join(g, on='SK_ID_CURR', how='left')
+
+    agg.columns = [
+        'CRED_{}'.format(c) for c in agg.columns]
+
+    return agg.reset_index()
 
 
 def main():

@@ -21,9 +21,6 @@ def handle_categorical(df):
 def aggregate_bureau():
     df = pd.read_feather('./data/bureau.preprocessed.feather')
 
-    # TODO: move
-    df['DIFF_ENDDATE'] = df['DAYS_ENDDATE_FACT'] - df['DAYS_CREDIT_ENDDATE']
-
     cat_agg = handle_categorical(df)
 
     a = {
@@ -50,6 +47,8 @@ def aggregate_bureau():
         'TSDIFF_DAYS_ENDDATE_FACT': ['mean', 'std', 'min', 'max'],
         'TSDIFF_DAYS_CREDIT_UPDATE': ['mean', 'std', 'min', 'max'],
         'DIFF_ENDDATE': ['mean', 'std', 'min', 'max'],
+        'GOOD_BB_LAST_STATUS': ['mean'],
+        'BAD_BB_LAST_STATUS': ['mean'],
         # bb
         'BB_FIRST_MONTHS_BALANCE': ['mean', 'min'],
         'BB_LAST_MONTHS_BALANCE': ['mean', 'max'],

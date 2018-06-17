@@ -57,9 +57,9 @@ def train(idx, validate, importance_summay):
 
     def get_cred():
         cred = pd.read_feather(
-            './data/credit_card_balance.preprocessed.feather')
-        sum_cred = summarize(cred, 'CRED')
-        return sum_cred
+            './data/credit_card_balance.agg.curr.feather')
+        factorize(cred)
+        return cred
 
     def get_inst():
         inst = pd.read_feather(
@@ -87,6 +87,7 @@ def train(idx, validate, importance_summay):
     sum_inst = get_inst()
     sum_pos = get_pos()
     sum_prev = get_prev()
+    last_pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.last.feather')
     gc.collect()
 
     factorize(df)
@@ -95,6 +96,7 @@ def train(idx, validate, importance_summay):
     df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
     df = df.merge(sum_pos, on='SK_ID_CURR', how='left')
     df = df.merge(sum_prev, on='SK_ID_CURR', how='left')
+    df = df.merge(last_pos, on='SK_ID_CURR', how='left')
 
     # TODO: mutate(na = apply(., 1, function(x) sum(is.na(x))),
     # TODO: mutate_all(funs(ifelse(is.nan(.), NA, .))) %>%

@@ -8,7 +8,7 @@ from datetime import datetime
 from collections import defaultdict
 from sklearn.metrics import roc_auc_score
 from utility import split_train
-pd.set_option("display.max_columns", 50)
+pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 '''
 This script is based on https://www.kaggle.com/kailex/tidy-xgb-all-tables-0-789
@@ -63,12 +63,13 @@ def train(idx, validate, importance_summay):
 
     def get_inst():
         inst = pd.read_feather(
-            './data/installments_payments.preprocessed.feather')
-        return summarize(inst, 'INST')
+            './data/installments_payments.agg.curr.feather')
+        return inst
 
     def get_pos():
-        pos = pd.read_feather('./data/POS_CASH_balance.preprocessed.feather')
-        return summarize(pos, 'POS')
+        pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.feather')
+        factorize(pos)
+        return pos
 
     def get_prev():
         prev = pd.read_feather('./data/previous_application.feather')

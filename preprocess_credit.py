@@ -28,6 +28,13 @@ def preprocess_credit():
     cred_df = cred_df.sort_values(
         ['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE']).reset_index(drop=True)
     cred_df = create_diff(cred_df)
+
+    cred_df['SK_DPD_PLUS'] = (cred_df['SK_DPD'] > 0).astype('i')
+    cred_df['SHORT_PAYMENT'] = (
+        cred_df['AMT_INST_MIN_REGULARITY'] >
+        cred_df['AMT_PAYMENT_TOTAL_CURRENT']
+    ).astype('i')
+
     cred_df['RATIO_USED_LIMIT'] = cred_df[
         'AMT_DRAWINGS_CURRENT'] / cred_df['AMT_CREDIT_LIMIT_ACTUAL']
 

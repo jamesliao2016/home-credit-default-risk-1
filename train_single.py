@@ -33,7 +33,7 @@ def train(idx, validate, importance_summay):
     if validate:
         train, test = split_train(train)
     else:
-        test = pd.read_feather('./data/application_test.feather')
+        test = pd.read_feather('./data/application_test.preprocessed.feather')
 
     n_train = len(train)
     df = pd.concat([train, test], sort=False)

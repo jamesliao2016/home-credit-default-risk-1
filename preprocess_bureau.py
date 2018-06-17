@@ -1,4 +1,5 @@
 import pandas as pd
+from preprocess_bb import is_bad, is_good
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 200)
 
@@ -36,6 +37,9 @@ def preprocess_bureau():
     df['BB_BAD_STATUS_MEAN'].fillna(0, inplace=True)
     df['BB_TERM'].fillna(0, inplace=True)
     add_diff(df)
+    df['DIFF_ENDDATE'] = df['DAYS_ENDDATE_FACT'] - df['DAYS_CREDIT_ENDDATE']
+    df['GOOD_BB_LAST_STATUS'] = df['BB_LAST_STATUS'].apply(is_good).astype('i')
+    df['BAD_BB_LAST_STATUS'] = df['BB_LAST_STATUS'].apply(is_bad).astype('i')
     return df
 
 

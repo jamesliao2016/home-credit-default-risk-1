@@ -1,12 +1,18 @@
 import pandas as pd
 
 
+def is_good(d):
+    return d in ['C', '0']
+
+
+def is_bad(d):
+    return d not in ['C', '0', 'X']
+
+
 def preprocess_bb():
     bb_df = pd.read_feather('./data/bureau_balance.feather')
-    bb_df['GOOD_STATUS'] = bb_df[
-        'STATUS'].apply(lambda d: d in ['C', '0']).astype('i')
-    bb_df['BAD_STATUS'] = bb_df[
-        'STATUS'].apply(lambda d: d not in ['C', '0', 'X']).astype('i')
+    bb_df['GOOD_STATUS'] = bb_df['STATUS'].apply(is_good).astype('i')
+    bb_df['BAD_STATUS'] = bb_df['STATUS'].apply(is_bad).astype('i')
     return bb_df
 
 

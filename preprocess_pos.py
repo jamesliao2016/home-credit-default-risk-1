@@ -21,7 +21,12 @@ def create_diff(df):
 def preprocess_pos():
     df = pd.read_feather('./data/POS_CASH_balance.feather')
     df = df.sort_values(['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE'])
+
     df = create_diff(df)
+
+    # add features
+    df['RATIO_CNT_INST'] = df['CNT_INSTALMENT_FUTURE'] / df['CNT_INSTALMENT']
+
     return df.reset_index(drop=True)
 
 

@@ -10,9 +10,6 @@ def aggregate_pos():
     del df['SK_ID_PREV']
     key = ['SK_ID_CURR']
 
-    # TODO: move
-    df['RATIO_CNT_INST'] = df['CNT_INSTALMENT_FUTURE'] / df['CNT_INSTALMENT']
-
     # count
     grp = df.groupby(key)
     g = grp[['MONTHS_BALANCE']].count()

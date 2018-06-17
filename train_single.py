@@ -144,7 +144,7 @@ def train(idx, validate, importance_summay):
         'subsample': 0.7,
         # 'subsample_freq': 1,
         'colsample_bytree': 0.7,
-        'min_child_weight': 40,
+        'min_child_weight': 60,
         # 'subsample_for_bin': 10000000,
         'min_split_gain': 0.00,
         'reg_alpha': 0.00,

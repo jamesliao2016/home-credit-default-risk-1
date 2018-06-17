@@ -44,3 +44,6 @@ data/credit_card_balance.preprocessed.feather: data/credit_card_balance.feather 
 # pos
 data/POS_CASH_balance.preprocessed.feather: data/POS_CASH_balance.feather preprocess_pos.py
 	python preprocess_pos.py
+
+data/POS_CASH_balance.agg.curr.feather: data/POS_CASH_balance.preprocessed.feather aggregate_pos_curr.py
+	python aggregate_pos_curr.py

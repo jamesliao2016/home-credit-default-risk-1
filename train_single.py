@@ -192,7 +192,7 @@ def main():
     validate = args.validate
     print('validate: {}'.format(validate))
     if validate:
-        n_bagging = 3
+        n_bagging = 5
     else:
         n_bagging = 11
     importance_summay = defaultdict(lambda: 0)

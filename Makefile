@@ -47,3 +47,7 @@ data/POS_CASH_balance.preprocessed.feather: data/POS_CASH_balance.feather prepro
 
 data/POS_CASH_balance.agg.curr.feather: data/POS_CASH_balance.preprocessed.feather aggregate_pos_curr.py
 	python aggregate_pos_curr.py
+
+# inst
+data/installments_payments.preprocessed.feather: data/installments_payments.feather preprocess_inst.py
+	python preprocess_inst.py

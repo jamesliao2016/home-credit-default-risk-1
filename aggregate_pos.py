@@ -30,6 +30,5 @@ def aggregate_pos(df, key):
     g = grp.agg(agg)
     g.columns = ['{}_{}'.format(a, b.upper()) for a, b in g.columns]
     pos_agg = pos_agg.join(g, on=key, how='left')
-    pos_agg.columns = ['POS_{}'.format(c) for c in pos_agg.columns]
 
     return pos_agg

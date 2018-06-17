@@ -53,19 +53,7 @@ def train(idx, validate, importance_summay):
         return res
 
     def get_bure():
-        bure = pd.read_feather('./data/bureau.feather')
-        bure = bure[bure['SK_ID_CURR'].isin(curr_id)].reset_index(drop=True)
-        bure_id = bure['SK_ID_BUREAU'].unique()
-        bb = pd.read_feather('./data/bureau_balance.feather')
-        bb = bb[bb['SK_ID_BUREAU'].isin(bure_id)].reset_index(drop=True)
-
-        factorize(bb)
-        sum_bb = bb.groupby('SK_ID_BUREAU').agg(agg)
-        rename_columns(sum_bb, 'BB')
-        sum_bb = sum_bb.reset_index()
-
-        bure = bure.merge(sum_bb, on='SK_ID_BUREAU', how='left')
-        return summarize(bure, 'BURE')
+        return pd.read_feather('./data/bureau.agg.feather')
 
     def get_cred():
         cred = pd.read_feather(

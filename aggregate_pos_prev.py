@@ -49,7 +49,7 @@ def aggregate_pos():
 
 def main():
     pos_agg = aggregate_pos()
-    pos_agg.to_feather('./data/POS_CASH_balance.agg.feather')
+    pos_agg.to_feather('./data/POS_CASH_balance.agg.prev.feather')
 
 
 if __name__ == '__main__':

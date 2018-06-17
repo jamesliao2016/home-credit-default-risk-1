@@ -7,9 +7,6 @@ def aggregate_inst():
     df = pd.read_feather('./data/installments_payments.preprocessed.feather')
     df = df.sort_values(['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_INSTALMENT'])
 
-    # TODO: Move to preprocess
-    df['IS_CREDIT'] = (df['NUM_INSTALMENT_VERSION'] == 0).astype('i')
-
     key = ['SK_ID_CURR', 'SK_ID_PREV']
     # Features: Perform aggregations
     agg = {

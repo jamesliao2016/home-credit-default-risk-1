@@ -22,6 +22,8 @@ def preprocess_inst():
         ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_INSTALMENT'])
     add_diff(ins_df)
 
+    ins_df['IS_CREDIT'] = (ins_df['NUM_INSTALMENT_VERSION'] == 0).astype('i')
+
     # Percentage and difference paid in each installment (amount paid and installment value) # noqa
     ins_df['RATIO_PAYMENT'] = ins_df['AMT_PAYMENT'] / ins_df['AMT_INSTALMENT']
     ins_df['DIFF_PAYMENT'] = ins_df['AMT_INSTALMENT'] - ins_df['AMT_PAYMENT']

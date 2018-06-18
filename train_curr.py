@@ -87,6 +87,8 @@ def train(idx, validate, importance_summay):
     sum_inst = get_inst()
     sum_pos = get_pos()
     sum_prev = get_prev()
+    last_inst = pd.read_feather(
+        './data/installments_payments.agg.curr.last.feather')
     last_pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.last.feather')
     last_cred = pd.read_feather(
         './data/credit_card_balance.agg.curr.last.feather')
@@ -98,6 +100,7 @@ def train(idx, validate, importance_summay):
     df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
     df = df.merge(sum_pos, on='SK_ID_CURR', how='left')
     df = df.merge(sum_prev, on='SK_ID_CURR', how='left')
+    df = df.merge(last_inst, on='SK_ID_CURR', how='left')
     df = df.merge(last_pos, on='SK_ID_CURR', how='left')
     df = df.merge(last_cred, on='SK_ID_CURR', how='left')
 

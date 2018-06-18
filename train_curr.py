@@ -72,14 +72,8 @@ def train(idx, validate, importance_summay):
         return pos
 
     def get_prev():
-        prev = pd.read_feather('./data/previous_application.feather')
-        prev['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace=True)
-        prev['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace=True)
-        prev['DAYS_LAST_DUE_1ST_VERSION'].replace(365243, np.nan, inplace=True)
-        prev['DAYS_LAST_DUE'].replace(365243, np.nan, inplace=True)
-        prev['DAYS_TERMINATION'].replace(365243, np.nan, inplace=True)
-        prev['APP_CREDIT_PERC'] = prev.AMT_APPLICATION / prev.AMT_CREDIT
-        return summarize(prev, 'PREV')
+        prev = pd.read_feather('./data/previous_application.agg.feather')
+        return prev
 
     print('summarize')
     sum_bure = get_bure()

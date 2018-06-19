@@ -87,6 +87,9 @@ def aggregate_bureau():
     agg = agg.join(cat_agg, on='SK_ID_CURR', how='left')
     agg.columns = ['BURE_{}'.format(c) for c in agg.columns]
 
+    agg['BURE_ACT_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
+    agg['BURE_ACT_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+
     return agg.reset_index()
 
 

@@ -98,9 +98,31 @@ def train(idx, validate, importance_summay):
     df = df.merge(last_pos, on='SK_ID_CURR', how='left')
     df = df.merge(last_cred, on='SK_ID_CURR', how='left')
 
-    # TODO: add last bureau sum of annuity
-    df['ANNUITY_SUM'] = df['AMT_ANNUITY'] + df['PREV_AMT_ANNUITY_SUM']
-    df['CREDIT_SUM'] = df['AMT_CREDIT'] + df['PREV_AMT_CREDIT_SUM']
+    # fillna
+    df['PREV_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+    df['PREV_AMT_CREDIT_SUM'].fillna(0, inplace=True)
+    df['BURE_ACT_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+    df['BURE_ACT_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
+
+    # calculate length
+    df['ANNUITY_SUM_AP'] = df['AMT_ANNUITY'] + df['PREV_AMT_ANNUITY_SUM']
+    df['CREDIT_SUM_AP'] = df['AMT_CREDIT'] + df['PREV_AMT_CREDIT_SUM']
+    df['ANNUITY_SUM_LENGTH_AP'] = df['CREDIT_SUM_AP'] / df['ANNUITY_SUM_AP']
+    df['DIFF_ANNUITY_AND_INCOME_SUM_AP'] =\
+        df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM_AP']
+
+    df['ANNUITY_SUM_AB'] = df['AMT_ANNUITY'] + df['BURE_ACT_AMT_ANNUITY_SUM']
+    df['CREDIT_SUM_AB'] = df['AMT_CREDIT'] + df['BURE_ACT_AMT_CREDIT_SUM_SUM']
+    df['ANNUITY_SUM_LENGTH_AB'] = df['CREDIT_SUM_AB'] / df['ANNUITY_SUM_AB']
+    df['DIFF_ANNUITY_AND_INCOME_SUM_AB'] =\
+        df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM_AB']
+
+    df['ANNUITY_SUM'] = (
+        df['AMT_ANNUITY'] + df['PREV_AMT_ANNUITY_SUM'] +
+        df['BURE_ACT_AMT_ANNUITY_SUM'])
+    df['CREDIT_SUM'] = (
+        df['AMT_CREDIT'] + df['PREV_AMT_CREDIT_SUM'] +
+        df['BURE_ACT_AMT_CREDIT_SUM_SUM'])
     df['ANNUITY_SUM_LENGTH'] = df['CREDIT_SUM'] / df['ANNUITY_SUM']
     df['DIFF_ANNUITY_AND_INCOME_SUM'] =\
         df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM']

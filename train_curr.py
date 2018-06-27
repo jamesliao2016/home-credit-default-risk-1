@@ -29,6 +29,8 @@ def merge_bure(df):
     df['BURE_RATIO_CREDIT_OVERDUE'] /= (1 + df['BURE_AMT_CREDIT_SUM_DEBT_SUM'])
     df['BURE_RATIO_CREDIT_OVERDUE'] = df['BURE_RATIO_CREDIT_OVERDUE'].apply(np.tanh)
 
+    df['BURE_ACT_DAYS_CREDIT_MAX'].fillna(-3000, inplace=True)
+
     return df
 
 

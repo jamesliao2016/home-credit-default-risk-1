@@ -43,6 +43,12 @@ def merge_inst(df):
     df['INS_AMT_PAYMENT_SUM'] = df['INS_AMT_PAYMENT_SUM'].apply(np.tanh)
 
     df['INS_DPD_MEAN'].fillna(0, inplace=True)
+    df['INS_DPD_MEAN'] = df['INS_DPD_MEAN'].apply(np.tanh)
+    df['INS_DBD_MAX'].fillna(0, inplace=True)
+    df['INS_DBD_MAX'] = df['INS_DBD_MAX'].apply(np.tanh)
+
+    df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'].fillna(0, inplace=True)
+    df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'] = df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'].apply(np.tanh)
 
     return df
 

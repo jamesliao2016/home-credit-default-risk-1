@@ -15,6 +15,23 @@ This script is based on https://www.kaggle.com/kailex/tidy-xgb-all-tables-0-789
 '''
 
 
+def merge_bure(df):
+    sum_bure = pd.read_feather('./data/bureau.agg.feather')
+    df = df.merge(sum_bure, on='SK_ID_CURR', how='left')
+    df['BURE_AMT_CREDIT_SUM_DEBT_SUM'].fillna(0, inplace=True)
+    df['BURE_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
+
+    df['BURE_RATIO_CREDIT_DEBT'] = df['BURE_AMT_CREDIT_SUM_DEBT_SUM']
+    df['BURE_RATIO_CREDIT_DEBT'] /= (1 + df['BURE_AMT_CREDIT_SUM_SUM'])
+    df['BURE_RATIO_CREDIT_DEBT'] = df['BURE_RATIO_CREDIT_DEBT'].apply(np.tanh)
+
+    df['BURE_RATIO_CREDIT_OVERDUE'] = df['BURE_AMT_CREDIT_SUM_OVERDUE_SUM']
+    df['BURE_RATIO_CREDIT_OVERDUE'] /= (1 + df['BURE_AMT_CREDIT_SUM_DEBT_SUM'])
+    df['BURE_RATIO_CREDIT_OVERDUE'] = df['BURE_RATIO_CREDIT_OVERDUE'].apply(np.tanh)
+
+    return df
+
+
 def factorize(df):
     columns = df.select_dtypes([np.object]).columns.tolist()
     for c in columns:
@@ -52,9 +69,6 @@ def train(idx, validate, importance_summay):
         rename_columns(res, prefix)
         return res
 
-    def get_bure():
-        return pd.read_feather('./data/bureau.agg.feather')
-
     def get_cred():
         cred = pd.read_feather(
             './data/credit_card_balance.agg.curr.feather')
@@ -76,7 +90,6 @@ def train(idx, validate, importance_summay):
         return prev
 
     print('summarize')
-    sum_bure = get_bure()
     sum_cred = get_cred()
     sum_inst = get_inst()
     sum_pos = get_pos()
@@ -89,7 +102,7 @@ def train(idx, validate, importance_summay):
     gc.collect()
 
     factorize(df)
-    df = df.merge(sum_bure, on='SK_ID_CURR', how='left')
+    df = merge_bure(df)
     df = df.merge(sum_cred, on='SK_ID_CURR', how='left')
     df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
     df = df.merge(sum_pos, on='SK_ID_CURR', how='left')

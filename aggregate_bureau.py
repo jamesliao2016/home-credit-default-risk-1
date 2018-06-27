@@ -65,11 +65,6 @@ def aggregate_bureau():
     g.columns = [x + "_" + y.upper() for x, y in g.columns]
     agg = g
 
-    agg['RATIO_CREDIT_DEBT'] = agg[
-        'AMT_CREDIT_SUM_DEBT_SUM'] / (1 + agg['AMT_CREDIT_SUM_SUM'])
-    agg['RATIO_CREDIT_OVERDUE'] = agg[
-        'AMT_CREDIT_SUM_OVERDUE_SUM'] / (1 + agg['AMT_CREDIT_SUM_DEBT_SUM'])
-
     # Bureau: Active credits - using only numerical aggregations
     act = df[df['CREDIT_ACTIVE'] == 'Active']
     g = act.groupby('SK_ID_CURR').agg(a)

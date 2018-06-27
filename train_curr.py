@@ -34,6 +34,19 @@ def merge_bure(df):
     return df
 
 
+def merge_inst(df):
+    sum_inst = pd.read_feather(
+        './data/installments_payments.agg.curr.feather')
+    df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
+
+    df['INS_AMT_PAYMENT_SUM'].fillna(0, inplace=True)
+    df['INS_AMT_PAYMENT_SUM'] = df['INS_AMT_PAYMENT_SUM'].apply(np.tanh)
+
+    df['INS_DPD_MEAN'].fillna(0, inplace=True)
+
+    return df
+
+
 def factorize(df):
     columns = df.select_dtypes([np.object]).columns.tolist()
     for c in columns:
@@ -77,11 +90,6 @@ def train(idx, validate, importance_summay):
         factorize(cred)
         return cred
 
-    def get_inst():
-        inst = pd.read_feather(
-            './data/installments_payments.agg.curr.feather')
-        return inst
-
     def get_pos():
         pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.feather')
         factorize(pos)
@@ -93,7 +101,6 @@ def train(idx, validate, importance_summay):
 
     print('summarize')
     sum_cred = get_cred()
-    sum_inst = get_inst()
     sum_pos = get_pos()
     sum_prev = get_prev()
     last_inst = pd.read_feather(
@@ -105,8 +112,8 @@ def train(idx, validate, importance_summay):
 
     factorize(df)
     df = merge_bure(df)
+    df = merge_inst(df)
     df = df.merge(sum_cred, on='SK_ID_CURR', how='left')
-    df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
     df = df.merge(sum_pos, on='SK_ID_CURR', how='left')
     df = df.merge(sum_prev, on='SK_ID_CURR', how='left')
     df = df.merge(last_inst, on='SK_ID_CURR', how='left')

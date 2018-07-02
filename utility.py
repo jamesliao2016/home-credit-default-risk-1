@@ -2,6 +2,13 @@ import numpy as np
 import pandas as pd
 
 
+def percentile(n):
+    def percentile_(x):
+        return np.percentile(x, n)
+    percentile_.__name__ = 'percentile_%s' % n
+    return percentile_
+
+
 def split_train(df):
     pos_df = df[df['TARGET'] == 1].sample(frac=1)
     neg_df = df[df['TARGET'] == 0].sample(frac=1)

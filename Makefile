@@ -26,8 +26,12 @@ split: $(PREP_SPLITS)
 $(PREP_SPLITS) $(ORIG_SPLITS): $(APP) $(APP_PREP_DSTS) split_train.py
 	python split_train.py
 
+# application
 $(APP_PREP_DSTS): $(DSTS) preprocess_application.py
 	python preprocess_application.py
+
+data/application.agg.feather: data/application_train.feather data/application_test.feather aggregate_app.py
+	python aggregate_app.py
 
 # bureau
 data/bureau_balance.preprocessed.feather: data/bureau_balance.feather preprocess_bb.py

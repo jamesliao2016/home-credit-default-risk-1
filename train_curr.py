@@ -53,13 +53,6 @@ def merge_inst(df):
     return df
 
 
-def merge_agg_app(df):
-    columns = ['NAME_FAMILY_STATUS', 'NAME_INCOME_TYPE', 'CODE_GENDER']
-    agg = pd.read_feather('./data/application.agg.feather')
-    df = df.merge(agg, on=columns, how='left')
-    return df
-
-
 def factorize(df):
     columns = df.select_dtypes([np.object]).columns.tolist()
     for c in columns:
@@ -123,7 +116,6 @@ def train(idx, validate, importance_summay):
         './data/credit_card_balance.agg.curr.last.feather')
     gc.collect()
 
-    df = merge_agg_app(df)
     factorize(df)
     df = merge_bure(df)
     df = merge_inst(df)

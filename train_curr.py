@@ -6,7 +6,6 @@ import pandas as pd
 import lightgbm as lgb
 from datetime import datetime
 from collections import defaultdict
-from sklearn.metrics import roc_auc_score
 from utility import split_train
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
@@ -219,9 +218,10 @@ def train(idx, validate, importance_summay):
         # feval=feval,
     )
 
+    score = evals_result['valid']['auc'][bst.best_iteration-1]
     print("\nModel Report")
     print("bst1.best_iteration: ", bst.best_iteration)
-    print("auc:", evals_result['valid']['auc'][bst.best_iteration-1])
+    print("auc:", score)
 
     importance = bst.feature_importance(iteration=bst.best_iteration)
     feature_name = bst.feature_name()
@@ -235,7 +235,7 @@ def train(idx, validate, importance_summay):
     if validate:
         test['TARGET'] = valid_y
     test['PRED'] = bst.predict(test[features], bst.best_iteration)
-    return test
+    return test, score
 
 
 def main():
@@ -256,12 +256,10 @@ def main():
     auc_summary = []
     results = []
     for i in range(n_bagging):
-        res = train(i, validate, importance_summay)
+        res, score = train(i, validate, importance_summay)
         results.append(res)
-        if validate:
-            score = roc_auc_score(res['TARGET'], res['PRED'])
-            auc_summary.append(score)
-            print('score: {}'.format(score))
+        auc_summary.append(score)
+        print('score: {}'.format(score))
 
     auc_summary = np.array(auc_summary)
 
@@ -269,10 +267,10 @@ def main():
     for key, value in importances[:500]:
         print('{} {}'.format(key, value))
 
-    if validate:
-        print('validate auc: {} +- {}'.format(
-            auc_summary.mean(), auc_summary.std()))
-    else:
+    print('validate auc: {} +- {}'.format(
+        auc_summary.mean(), auc_summary.std()))
+
+    if not validate:
         res = results[0][['SK_ID_CURR']].set_index('SK_ID_CURR')
         res['TARGET'] = 0
         for df in results:

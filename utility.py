@@ -1,3 +1,5 @@
+import random
+import chainer
 import numpy as np
 import pandas as pd
 
@@ -63,3 +65,10 @@ def calc_2nd_order_feature(df):
 
     grp = grp[['SK_ID_CURR'] + tcolumns]
     return grp
+
+
+def reset_seed(seed=0):
+    random.seed(seed)
+    np.random.seed(seed)
+    if chainer.cuda.available:
+        chainer.cuda.cupy.random.seed(seed)

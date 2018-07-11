@@ -1,8 +1,5 @@
 import matplotlib
 matplotlib.use('Agg')  # noqa
-import random
-import chainer
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from chainer.training import Trainer
@@ -11,14 +8,8 @@ from chainer.optimizers import Adam
 from chainer.training.updaters import StandardUpdater
 from chainer.training import extensions
 from nn import create_model_and_datasets
+from utility import reset_seed
 pd.set_option("display.max_columns", 1000)
-
-
-def reset_seed(seed=0):
-    random.seed(seed)
-    np.random.seed(seed)
-    if chainer.cuda.available:
-        chainer.cuda.cupy.random.seed(seed)
 
 
 def main():

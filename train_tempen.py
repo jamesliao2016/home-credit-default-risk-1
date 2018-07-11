@@ -99,10 +99,30 @@ def main():
     df = pd.concat([train, test], sort=False).reset_index(drop=True)
     df['index'] = np.arange(len(df))
 
-    features = ['EXT_SOURCE_1']
+    features = [
+        'EXT_SOURCE_1',
+        'EXT_SOURCE_2',
+        'EXT_SOURCE_3',
+        'EXT_SOURCES_MEAN',
+        'ANNUITY_LENGTH',
+        'CONSUMER_GOODS_RATIO',
+        'DAYS_EMPLOYED',
+        'DAYS_EMPLOYED_PERC',
+        'INCOME_CREDIT_PERC',
+        'INCOME_PER_PERSON',
+        'ANNUITY_INCOME_PERC',
+        'LOAN_INCOME_RATIO',
+        'ANNUITY_INCOME_RATIO',
+        'WORKING_LIFE_RATIO',
+        'INCOME_PER_FAM',
+        'CHILDREN_RATIO',
+    ]
     for c in features:
         m = df[c].mean()
-        df[pd.isnull(df[c])] = m
+        df.loc[pd.isnull(df[c]), c] = m
+        s = df[c].std()
+        df[c] -= m
+        df[c] /= s
 
     train = df[pd.notnull(df['TARGET'])]
     test = df[pd.isnull(df['TARGET'])]

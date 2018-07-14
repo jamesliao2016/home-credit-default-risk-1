@@ -80,3 +80,5 @@ $(INST_AGG_CURR): $(INST_PREP) aggregate_inst_curr.py
 	python aggregate_inst_curr.py
 $(INST_AGG_LAST): $(INST_PREP) aggregate_inst_last.py
 	python aggregate_inst_last.py
+data/installments_payments.agg.prev.last.feather: data/installments_payments.preprocessed.feather aggregate_inst_prev_last.py
+	python aggregate_inst_prev_last.py

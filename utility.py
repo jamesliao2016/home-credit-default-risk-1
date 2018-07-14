@@ -4,6 +4,12 @@ import numpy as np
 import pandas as pd
 
 
+def factorize(df):
+    columns = df.select_dtypes([np.object]).columns.tolist()
+    for c in columns:
+        df[c], _ = pd.factorize(df[c])
+
+
 def percentile(n):
     def percentile_(x):
         return np.percentile(x, n)

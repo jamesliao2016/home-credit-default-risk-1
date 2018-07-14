@@ -6,7 +6,7 @@ import pandas as pd
 import lightgbm as lgb
 from datetime import datetime
 from collections import defaultdict
-from utility import split_train, percentile, factorize
+from utility import split_train, factorize
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 '''

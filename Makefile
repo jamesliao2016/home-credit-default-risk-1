@@ -66,6 +66,9 @@ data/POS_CASH_balance.agg.curr.feather: data/POS_CASH_balance.preprocessed.feath
 data/POS_CASH_balance.agg.prev.feather: data/POS_CASH_balance.preprocessed.feather aggregate_pos_prev.py
 	python aggregate_pos_prev.py
 
+data/POS_CASH_balance.agg.prev.last.feather: data/POS_CASH_balance.preprocessed.feather aggregate_pos_prev_last.py
+	python aggregate_pos_prev_last.py
+
 # inst
 INST := data/installments_payments.feather
 INST_PREP := data/installments_payments.preprocessed.feather

@@ -14,9 +14,7 @@ This script is based on https://www.kaggle.com/kailex/tidy-xgb-all-tables-0-789
 '''
 
 
-def merge_bure(df):
-    sum_bure = pd.read_feather('./data/bureau.agg.feather')
-    df = df.merge(sum_bure, on='SK_ID_CURR', how='left')
+def add_bure_features(df):
     df['BURE_AMT_CREDIT_SUM_DEBT_SUM'].fillna(0, inplace=True)
     df['BURE_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
 
@@ -30,14 +28,21 @@ def merge_bure(df):
 
     df['BURE_ACT_DAYS_CREDIT_MAX'].fillna(-3000, inplace=True)
 
+    df['BURE_ACT_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
+    df['BURE_ACT_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
+
     return df
 
 
-def merge_inst(df):
-    sum_inst = pd.read_feather(
-        './data/installments_payments.agg.curr.feather')
-    df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
+def merge_bure(df):
+    sum_bure = pd.read_feather('./data/bureau.agg.feather')
+    df = df.merge(sum_bure, on='SK_ID_CURR', how='left')
+    df = add_bure_features(df)
 
+    return df
+
+
+def add_inst_features(df):
     df['INS_AMT_PAYMENT_SUM'].fillna(0, inplace=True)
     df['INS_AMT_PAYMENT_SUM'] = df['INS_AMT_PAYMENT_SUM'].apply(np.tanh)
 
@@ -52,10 +57,13 @@ def merge_inst(df):
     return df
 
 
-def factorize(df):
-    columns = df.select_dtypes([np.object]).columns.tolist()
-    for c in columns:
-        df[c], _ = pd.factorize(df[c])
+def merge_inst(df):
+    sum_inst = pd.read_feather(
+        './data/installments_payments.agg.curr.feather')
+    df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
+    df = add_inst_features(df)
+
+    return df
 
 
 def rename_columns(g, prefix):

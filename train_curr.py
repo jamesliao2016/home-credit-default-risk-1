@@ -1,12 +1,10 @@
 import os
 import gc
-import argparse
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
 from datetime import datetime
 from collections import defaultdict
-from utility import split_train, factorize
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 '''
@@ -14,169 +12,21 @@ This script is based on https://www.kaggle.com/kailex/tidy-xgb-all-tables-0-789
 '''
 
 
-def add_bure_features(df):
-    df['BURE_AMT_CREDIT_SUM_DEBT_SUM'].fillna(0, inplace=True)
-    df['BURE_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
-
-    df['BURE_RATIO_CREDIT_DEBT'] = df['BURE_AMT_CREDIT_SUM_DEBT_SUM']
-    df['BURE_RATIO_CREDIT_DEBT'] /= (1 + df['BURE_AMT_CREDIT_SUM_SUM'])
-    df['BURE_RATIO_CREDIT_DEBT'] = df['BURE_RATIO_CREDIT_DEBT'].apply(np.tanh)
-
-    df['BURE_RATIO_CREDIT_OVERDUE'] = df['BURE_AMT_CREDIT_SUM_OVERDUE_SUM']
-    df['BURE_RATIO_CREDIT_OVERDUE'] /= (1 + df['BURE_AMT_CREDIT_SUM_DEBT_SUM'])
-    df['BURE_RATIO_CREDIT_OVERDUE'] = df['BURE_RATIO_CREDIT_OVERDUE'].apply(np.tanh)
-
-    df['BURE_ACT_DAYS_CREDIT_MAX'].fillna(-3000, inplace=True)
-
-    df['BURE_ACT_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
-    df['BURE_ACT_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
-
-    return df
+def load(idx):
+    fold = './data/fold.{}.feather'.format(idx)
+    print('load {}'.format(fold))
+    fold = pd.read_feather(fold)
+    df = pd.read_feather('./data/features.feather')
+    test = df[pd.isnull(df['TARGET'])].reset_index(drop=True)
+    df = df[~pd.isnull(df['TARGET'])].reset_index(drop=True)
+    train = df[~df['SK_ID_CURR'].isin(fold['SK_ID_CURR'])].reset_index(drop=True)
+    valid = df[df['SK_ID_CURR'].isin(fold['SK_ID_CURR'])].reset_index(drop=True)
+    return train, valid, test
 
 
-def merge_bure(df):
-    sum_bure = pd.read_feather('./data/bureau.agg.feather')
-    df = df.merge(sum_bure, on='SK_ID_CURR', how='left')
-    df = add_bure_features(df)
-
-    return df
-
-
-def add_inst_features(df):
-    df['INS_AMT_PAYMENT_SUM'].fillna(0, inplace=True)
-    df['INS_AMT_PAYMENT_SUM'] = df['INS_AMT_PAYMENT_SUM'].apply(np.tanh)
-
-    df['INS_DPD_MEAN'].fillna(0, inplace=True)
-    df['INS_DPD_MEAN'] = df['INS_DPD_MEAN'].apply(np.tanh)
-    df['INS_DBD_MAX'].fillna(0, inplace=True)
-    df['INS_DBD_MAX'] = df['INS_DBD_MAX'].apply(np.tanh)
-
-    df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'].fillna(0, inplace=True)
-    df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'] = df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'].apply(np.tanh)
-
-    return df
-
-
-def merge_inst(df):
-    sum_inst = pd.read_feather(
-        './data/installments_payments.agg.curr.feather')
-    df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
-    df = add_inst_features(df)
-
-    return df
-
-
-def rename_columns(g, prefix):
-    g.columns = [a + "_" + b.upper() for a, b in g.columns]
-    g.columns = ['{}_{}'.format(prefix, c) for c in g.columns]
-
-
-def train(idx, validate, importance_summay):
-    src = './data/application_train.preprocessed.split.{}.feather'.format(idx)
-    print('load {}'.format(src))
-    train = pd.read_feather(src)
-    if validate:
-        train, test = split_train(train)
-    else:
-        test = pd.read_feather('./data/application_test.preprocessed.feather')
-
-    n_train = len(train)
-    df = pd.concat([train, test], sort=False)
-    agg = ['mean', 'std', 'min', 'max', 'nunique']
-
-    curr_id = df['SK_ID_CURR'].unique()
-
-    def summarize(df, prefix):
-        df = df[df['SK_ID_CURR'].isin(curr_id)].reset_index(drop=True)
-        factorize(df)
-        if 'SK_ID_BUREAU' in df.columns:
-            del df['SK_ID_BUREAU']
-        if 'SK_ID_PREV' in df.columns:
-            del df['SK_ID_PREV']
-        res = df.groupby('SK_ID_CURR').agg(agg)
-        rename_columns(res, prefix)
-        return res
-
-    def get_cred():
-        cred = pd.read_feather(
-            './data/credit_card_balance.agg.curr.feather')
-        factorize(cred)
-        return cred
-
-    def get_pos():
-        pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.feather')
-        factorize(pos)
-        return pos
-
-    def get_prev():
-        prev = pd.read_feather('./data/previous_application.agg.feather')
-        return prev
-
-    print('summarize')
-    sum_cred = get_cred()
-    sum_pos = get_pos()
-    sum_prev = get_prev()
-    last_inst = pd.read_feather(
-        './data/installments_payments.agg.curr.last.feather')
-    last_pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.last.feather')
-    last_cred = pd.read_feather(
-        './data/credit_card_balance.agg.curr.last.feather')
+def train(idx, importance_summay):
+    train, valid, test = load(idx)
     gc.collect()
-
-    factorize(df)
-    df = merge_bure(df)
-    df = merge_inst(df)
-    df = df.merge(sum_cred, on='SK_ID_CURR', how='left')
-    df = df.merge(sum_pos, on='SK_ID_CURR', how='left')
-    df = df.merge(sum_prev, on='SK_ID_CURR', how='left')
-    df = df.merge(last_inst, on='SK_ID_CURR', how='left')
-    df = df.merge(last_pos, on='SK_ID_CURR', how='left')
-    df = df.merge(last_cred, on='SK_ID_CURR', how='left')
-
-    # fillna
-    df['PREV_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
-    df['PREV_AMT_CREDIT_SUM'].fillna(0, inplace=True)
-    df['BURE_ACT_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
-    df['BURE_ACT_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
-
-    # calculate length
-    df['ANNUITY_SUM_AP'] = df['AMT_ANNUITY'] + df['PREV_AMT_ANNUITY_SUM']
-    df['CREDIT_SUM_AP'] = df['AMT_CREDIT'] + df['PREV_AMT_CREDIT_SUM']
-    df['ANNUITY_SUM_LENGTH_AP'] = df['CREDIT_SUM_AP'] / df['ANNUITY_SUM_AP']
-    df['DIFF_ANNUITY_AND_INCOME_SUM_AP'] =\
-        df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM_AP']
-
-    df['ANNUITY_SUM_AB'] = df['AMT_ANNUITY'] + df['BURE_ACT_AMT_ANNUITY_SUM']
-    df['CREDIT_SUM_AB'] = df['AMT_CREDIT'] + df['BURE_ACT_AMT_CREDIT_SUM_SUM']
-    df['ANNUITY_SUM_LENGTH_AB'] = df['CREDIT_SUM_AB'] / df['ANNUITY_SUM_AB']
-    df['DIFF_ANNUITY_AND_INCOME_SUM_AB'] =\
-        df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM_AB']
-
-    df['ANNUITY_SUM'] = (
-        df['AMT_ANNUITY'] + df['PREV_AMT_ANNUITY_SUM'] +
-        df['BURE_ACT_AMT_ANNUITY_SUM'])
-    df['CREDIT_SUM'] = (
-        df['AMT_CREDIT'] + df['PREV_AMT_CREDIT_SUM'] +
-        df['BURE_ACT_AMT_CREDIT_SUM_SUM'])
-    df['ANNUITY_SUM_LENGTH'] = df['CREDIT_SUM'] / df['ANNUITY_SUM']
-    df['DIFF_ANNUITY_AND_INCOME_SUM'] =\
-        df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM']
-
-    # TODO: mutate(na = apply(., 1, function(x) sum(is.na(x))),
-    # TODO: mutate_all(funs(ifelse(is.nan(.), NA, .))) %>%
-    # TODO: mutate_all(funs(ifelse(is.infinite(.), NA, .))) %>%
-
-    train = df[:n_train].reset_index(drop=True)
-    test = df[n_train:].reset_index(drop=True)
-
-    if validate:
-        n_train = len(train)
-        train = train
-        valid = test
-    else:
-        n_train = int(len(train) * 0.85)
-        valid = train[n_train:].reset_index(drop=True)
-        train = train[:n_train].reset_index(drop=True)
 
     train_y = train.pop('TARGET')
     valid_y = valid.pop('TARGET')
@@ -192,24 +42,23 @@ def train(idx, validate, importance_summay):
         feature_name=features,
         categorical_feature=[],
     )
+    del train
+    del valid
+    gc.collect()
     evals_result = {}
     lgb_params = {
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': 'auc',
         'learning_rate': 0.05,
-        'num_leaves': 15,
-        'max_depth': -1,  # -1 means no limit
-        # 'min_data_in_leaf': 40,
-        # 'max_bin': 64,
-        'subsample': 0.7,
-        # 'subsample_freq': 1,
-        'colsample_bytree': 0.7,
-        'min_child_weight': 120,
-        # 'subsample_for_bin': 10000000,
-        'min_split_gain': 0.00,
-        'reg_alpha': 0.01,
-        'reg_lambda': 0.01,
+        'num_leaves': 32,
+        'max_depth': 8,  # -1 means no limit
+        'subsample': 0.8715623,
+        'colsample_bytree': 0.9497036,
+        'min_child_weight': 40,
+        'min_split_gain': 0.0222415,
+        'reg_alpha': 0.04,
+        'reg_lambda': 0.073,
         'nthread': 12,
         'verbose': 0,
     }
@@ -240,8 +89,6 @@ def train(idx, validate, importance_summay):
     for key, value in zip(feature_name, importance):
         importance_summay[key] += value / sum(importance)
 
-    if validate:
-        test['TARGET'] = valid_y
     test['PRED'] = bst.predict(test[features], bst.best_iteration)
     return test, score
 
@@ -250,21 +97,16 @@ def main():
     np.random.seed(215)
     now = datetime.now().strftime('%m%d-%H%M')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--validate', action='store_true')
-    args = parser.parse_args()
+    debug = False
+    print('debug: {}'.format(debug))
+    gc.collect()
 
-    validate = args.validate
-    print('validate: {}'.format(validate))
-    if validate:
-        n_bagging = 5
-    else:
-        n_bagging = 11
     importance_summay = defaultdict(lambda: 0)
     auc_summary = []
     results = []
-    for i in range(n_bagging):
-        res, score = train(i, validate, importance_summay)
+    for i in range(5):
+        res, score = train(i, importance_summay)
+        gc.collect()
         results.append(res)
         auc_summary.append(score)
         print('score: {}'.format(score))
@@ -278,18 +120,17 @@ def main():
     print('validate auc: {} +- {}'.format(
         auc_summary.mean(), auc_summary.std()))
 
-    if not validate:
-        res = results[0][['SK_ID_CURR']].set_index('SK_ID_CURR')
-        res['TARGET'] = 0
-        for df in results:
-            df = df.set_index('SK_ID_CURR')
-            res['TARGET'] += df['PRED']
-        res['TARGET'] /= res['TARGET'].max()
-        res = res.reset_index()
-        os.makedirs('./output', exist_ok=True)
-        path = os.path.join('./output', '{}.csv.gz'.format(now))
-        print('save {}'.format(path))
-        res.to_csv(path, index=False, compression='gzip')
+    res = results[0][['SK_ID_CURR']].set_index('SK_ID_CURR')
+    res['TARGET'] = 0
+    for df in results:
+        df = df.set_index('SK_ID_CURR')
+        res['TARGET'] += df['PRED']
+    res['TARGET'] /= res['TARGET'].max()
+    res = res.reset_index()
+    os.makedirs('./output', exist_ok=True)
+    path = os.path.join('./output', '{}.csv.gz'.format(now))
+    print('save {}'.format(path))
+    res.to_csv(path, index=False, compression='gzip')
 
 
 if __name__ == '__main__':

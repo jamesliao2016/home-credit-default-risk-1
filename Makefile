@@ -26,6 +26,16 @@ split: $(PREP_SPLITS)
 $(PREP_SPLITS) $(ORIG_SPLITS): $(APP) $(APP_PREP_DSTS) split_train.py
 	python split_train.py
 
+# folds
+FOLDS := $(shell seq 0 4)
+FOLDS := $(addsuffix .feather,$(FOLDS))
+FOLDS := $(addprefix data/fold.,$(FOLDS))
+
+.PHONY: fold
+fold: $(FOLDS)
+$(FOLDS): $(APP_PREP_DSTS) split_fold.py
+	python split_fold.py
+
 # application
 $(APP_PREP_DSTS): $(DSTS) preprocess_application.py
 	python preprocess_application.py

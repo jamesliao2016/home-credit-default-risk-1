@@ -1,8 +1,9 @@
 import gc
 import numpy as np
 import pandas as pd
-from utility import factorize
+from utility import factorize, one_hot_encoder
 pd.set_option("display.max_columns", 200)
+pd.set_option("display.width", 180)
 
 
 def add_bure_features(df):
@@ -57,6 +58,18 @@ def merge_inst(df):
     return df
 
 
+def merge_prev(df):
+    print('merge prev...')
+    prev = pd.read_feather('./data/previous_application.agg.feather')
+    prev, _ = one_hot_encoder(prev)
+    last = pd.read_feather('./data/previous_application.last.feather')
+    last, _ = one_hot_encoder(last)
+    df = df.merge(prev, on='SK_ID_CURR', how='left')
+    df = df.merge(last, on='SK_ID_CURR', how='left')
+
+    return df
+
+
 def rename_columns(g, prefix):
     g.columns = [a + "_" + b.upper() for a, b in g.columns]
     g.columns = ['{}_{}'.format(prefix, c) for c in g.columns]
@@ -92,14 +105,9 @@ def preprocess(debug):
         factorize(pos)
         return pos
 
-    def get_prev():
-        prev = pd.read_feather('./data/previous_application.agg.feather')
-        return prev
-
     print('summarize')
     sum_cred = get_cred()
     sum_pos = get_pos()
-    sum_prev = get_prev()
     last_inst = pd.read_feather(
         './data/installments_payments.agg.curr.last.feather')
     last_pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.last.feather')
@@ -109,10 +117,10 @@ def preprocess(debug):
 
     factorize(df)
     df = merge_bure(df)
+    df = merge_prev(df)
     df = merge_inst(df)
     df = df.merge(sum_cred, on='SK_ID_CURR', how='left')
     df = df.merge(sum_pos, on='SK_ID_CURR', how='left')
-    df = df.merge(sum_prev, on='SK_ID_CURR', how='left')
     df = df.merge(last_inst, on='SK_ID_CURR', how='left')
     df = df.merge(last_pos, on='SK_ID_CURR', how='left')
     df = df.merge(last_cred, on='SK_ID_CURR', how='left')

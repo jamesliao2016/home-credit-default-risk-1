@@ -12,7 +12,7 @@ def aggregate_bb():
 
     # aggregate
     grp = bb.groupby('SK_ID_BUREAU')
-    g = grp.agg(['mean', 'std', 'min', 'max', 'nunique'])
+    g = grp.agg(['mean', 'std', 'sum', 'min', 'max', 'nunique'])
     g.columns = [a + "_" + b.upper() for a, b in g.columns]
 
     # edge

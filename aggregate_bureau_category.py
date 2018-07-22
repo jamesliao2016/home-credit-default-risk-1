@@ -1,5 +1,5 @@
 import pandas as pd
-from utility import one_hot_encoder
+from utility import one_hot_encoder, reduce_memory
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 200)
 
@@ -11,8 +11,7 @@ def main():
     df, _ = one_hot_encoder(df)
     df = df.groupby('SK_ID_CURR').sum()
     df.columns = ['BURE_{}'.format(c) for c in df.columns]
-    for c in df.columns:
-        df[c] = df[c].astype('int16')
+    reduce_memory(df)
     df = df.reset_index()
     df.to_feather('./data/bureau.agg.cat.feather')
 

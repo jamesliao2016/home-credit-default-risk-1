@@ -88,10 +88,16 @@ def merge_cred(df):
 
 def merge_pos(df):
     print('merge pos...')
-    pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.feather')
-    df = df.merge(pos, on='SK_ID_CURR', how='left')
-    pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.last.feather')
-    df = df.merge(pos, on='SK_ID_CURR', how='left')
+    for fname in [
+        './data/POS_CASH_balance.agg.curr.feather',
+        './data/POS_CASH_balance.agg.curr.last.feather',
+        './data/pos.edge.agg.num.feather',
+        './data/pos.edge.agg.cat.feather',
+    ]:
+        gc.collect()
+        print('merge {}...'.format(fname))
+        pos = pd.read_feather(fname)
+        df = df.merge(pos, on='SK_ID_CURR', how='left')
     return df
 
 

@@ -3,6 +3,7 @@ default:
 
 include ./feather.mk
 include ./bureau.mk
+include ./pos.mk
 
 APP_PREP_DSTS := data/application_test.preprocessed.feather data/application_train.preprocessed.feather
 
@@ -50,19 +51,6 @@ data/credit_card_balance.agg.prev.feather: data/credit_card_balance.preprocessed
 
 data/credit_card_balance.agg.prev.last.feather: data/credit_card_balance.preprocessed.feather aggregate_credit_prev_last.py
 	python aggregate_credit_prev_last.py
-
-# pos
-data/POS_CASH_balance.preprocessed.feather: data/POS_CASH_balance.feather preprocess_pos.py
-	python preprocess_pos.py
-
-data/POS_CASH_balance.agg.curr.feather: data/POS_CASH_balance.preprocessed.feather aggregate_pos_curr.py
-	python aggregate_pos_curr.py
-
-data/POS_CASH_balance.agg.prev.feather: data/POS_CASH_balance.preprocessed.feather aggregate_pos_prev.py
-	python aggregate_pos_prev.py
-
-data/POS_CASH_balance.agg.prev.last.feather: data/POS_CASH_balance.preprocessed.feather aggregate_pos_prev_last.py
-	python aggregate_pos_prev_last.py
 
 # inst
 INST := data/installments_payments.feather

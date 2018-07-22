@@ -26,13 +26,14 @@ def preprocess_pos():
 
     # add features
     df['RATIO_CNT_INST'] = df['CNT_INSTALMENT_FUTURE'] / df['CNT_INSTALMENT']
+    reduce_memory(df)
 
     return df.reset_index(drop=True)
 
 
 def main():
     df = preprocess_pos()
-    df.to_feather('./data/POS_CASH_balance.preprocessed.feather')
+    df.to_feather('./data/pos.preprocessed.feather')
 
 
 if __name__ == '__main__':

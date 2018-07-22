@@ -1,4 +1,5 @@
 import pandas as pd
+from utility import reduce_memory
 pd.set_option("display.width", 180)
 pd.set_option("display.max_columns", 200)
 pd.set_option("display.max_rows", 300)

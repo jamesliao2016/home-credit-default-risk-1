@@ -1,4 +1,6 @@
 import pandas as pd
+pd.set_option("display.max_columns", 200)
+pd.set_option("display.width", 180)
 
 
 def is_good(d):
@@ -10,15 +12,15 @@ def is_bad(d):
 
 
 def preprocess_bb():
-    bb_df = pd.read_feather('./data/bureau_balance.feather')
-    bb_df['GOOD_STATUS'] = bb_df['STATUS'].apply(is_good).astype('i')
-    bb_df['BAD_STATUS'] = bb_df['STATUS'].apply(is_bad).astype('i')
-    return bb_df
+    bb = pd.read_feather('./data/bureau_balance.feather')
+    bb['GOOD_STATUS'] = bb['STATUS'].apply(is_good).astype('i')
+    bb['BAD_STATUS'] = bb['STATUS'].apply(is_bad).astype('i')
+    return bb
 
 
 def main():
-    bb_df = preprocess_bb()
-    bb_df.to_feather('./data/bureau_balance.preprocessed.feather')
+    bb = preprocess_bb()
+    bb.to_feather('./data/bureau_balance.preprocessed.feather')
 
 
 if __name__ == '__main__':

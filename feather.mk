@@ -5,5 +5,5 @@ DSTS := $(SRCS:.csv.zip=.feather)
 .PHONY: feather
 feather: $(DSTS)
 
-$(DSTS): $(SRCS) convert.py
+$(DSTS): %.feather: %.csv.zip convert.py
 	python convert.py --src $< --dst $@

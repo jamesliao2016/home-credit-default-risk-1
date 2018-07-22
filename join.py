@@ -1,7 +1,7 @@
 import gc
 import numpy as np
 import pandas as pd
-from utility import factorize, one_hot_encoder
+from utility import factorize
 pd.set_option("display.max_columns", 200)
 pd.set_option("display.width", 180)
 
@@ -42,18 +42,25 @@ def add_inst_features(df):
 
 
 def merge_bure(df):
-    sum_bure = pd.read_feather('./data/bureau.agg.feather')
-    df = df.merge(sum_bure, on='SK_ID_CURR', how='left')
+    print('merge bure...')
+    bure = pd.read_feather('./data/bureau.agg.num.feather')
+    df = df.merge(bure, on='SK_ID_CURR', how='left')
+    bure = pd.read_feather('./data/bureau.agg.cat.feather')
+    df = df.merge(bure, on='SK_ID_CURR', how='left')
     df = add_bure_features(df)
 
     return df
 
 
 def merge_inst(df):
-    sum_inst = pd.read_feather(
+    print('merge inst...')
+    inst = pd.read_feather(
         './data/installments_payments.agg.curr.feather')
-    df = df.merge(sum_inst, on='SK_ID_CURR', how='left')
-    df = add_inst_features(df)
+    inst = add_inst_features(inst)
+    df = df.merge(inst, on='SK_ID_CURR', how='left')
+    inst = pd.read_feather(
+        './data/installments_payments.agg.curr.last.feather')
+    df = df.merge(inst, on='SK_ID_CURR', how='left')
 
     return df
 
@@ -61,12 +68,30 @@ def merge_inst(df):
 def merge_prev(df):
     print('merge prev...')
     prev = pd.read_feather('./data/previous_application.agg.feather')
-    prev, _ = one_hot_encoder(prev)
-    last = pd.read_feather('./data/previous_application.last.feather')
-    last, _ = one_hot_encoder(last)
     df = df.merge(prev, on='SK_ID_CURR', how='left')
-    df = df.merge(last, on='SK_ID_CURR', how='left')
+    prev = pd.read_feather('./data/previous_application.last.feather')
+    df = df.merge(prev, on='SK_ID_CURR', how='left')
 
+    return df
+
+
+def merge_cred(df):
+    print('merge cred...')
+    cred = pd.read_feather(
+        './data/credit_card_balance.agg.curr.feather')
+    df = df.merge(cred, on='SK_ID_CURR', how='left')
+    cred = pd.read_feather(
+        './data/credit_card_balance.agg.curr.last.feather')
+    df = df.merge(cred, on='SK_ID_CURR', how='left')
+    return df
+
+
+def merge_pos(df):
+    print('merge pos...')
+    pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.feather')
+    df = df.merge(pos, on='SK_ID_CURR', how='left')
+    pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.last.feather')
+    df = df.merge(pos, on='SK_ID_CURR', how='left')
     return df
 
 
@@ -82,48 +107,18 @@ def preprocess(debug):
     test = pd.read_feather('./data/application_test.preprocessed.feather')
 
     df = pd.concat([train, test], sort=False)
-    agg = ['mean', 'std', 'min', 'max', 'nunique']
 
-    def summarize(df, prefix):
-        factorize(df)
-        if 'SK_ID_BUREAU' in df.columns:
-            del df['SK_ID_BUREAU']
-        if 'SK_ID_PREV' in df.columns:
-            del df['SK_ID_PREV']
-        res = df.groupby('SK_ID_CURR').agg(agg)
-        rename_columns(res, prefix)
-        return res
-
-    def get_cred():
-        cred = pd.read_feather(
-            './data/credit_card_balance.agg.curr.feather')
-        factorize(cred)
-        return cred
-
-    def get_pos():
-        pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.feather')
-        factorize(pos)
-        return pos
-
-    print('summarize')
-    sum_cred = get_cred()
-    sum_pos = get_pos()
-    last_inst = pd.read_feather(
-        './data/installments_payments.agg.curr.last.feather')
-    last_pos = pd.read_feather('./data/POS_CASH_balance.agg.curr.last.feather')
-    last_cred = pd.read_feather(
-        './data/credit_card_balance.agg.curr.last.feather')
-    gc.collect()
-
-    factorize(df)
     df = merge_bure(df)
+    gc.collect()
     df = merge_prev(df)
+    gc.collect()
     df = merge_inst(df)
-    df = df.merge(sum_cred, on='SK_ID_CURR', how='left')
-    df = df.merge(sum_pos, on='SK_ID_CURR', how='left')
-    df = df.merge(last_inst, on='SK_ID_CURR', how='left')
-    df = df.merge(last_pos, on='SK_ID_CURR', how='left')
-    df = df.merge(last_cred, on='SK_ID_CURR', how='left')
+    gc.collect()
+    df = merge_cred(df)
+    gc.collect()
+    df = merge_pos(df)
+    gc.collect()
+    factorize(df)
 
     # fillna
     df['PREV_AMT_ANNUITY_SUM'].fillna(0, inplace=True)

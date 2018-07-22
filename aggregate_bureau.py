@@ -1,14 +1,15 @@
 import pandas as pd
-from utility import one_hot_encoder
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 200)
 
 
 def aggregate_bureau():
     df = pd.read_feather('./data/bureau.preprocessed.feather')
-    df, _ = one_hot_encoder(df)
+    columns = [c for c in df.columns if df[c].dtype != 'object']
+    df = df[columns]
 
     a = ['mean', 'std', 'sum', 'min', 'max', 'nunique']
+
     grp = df.groupby('SK_ID_CURR')
     g = grp.agg(a)
     g.columns = [x + "_" + y.upper() for x, y in g.columns]
@@ -38,7 +39,7 @@ def aggregate_bureau():
 
 def main():
     agg = aggregate_bureau()
-    agg.to_feather('./data/bureau.agg.feather')
+    agg.to_feather('./data/bureau.agg.num.feather')
 
 
 if __name__ == '__main__':

@@ -16,7 +16,9 @@ def load(idx):
     fold = './data/fold.{}.feather'.format(idx)
     print('load {}'.format(fold))
     fold = pd.read_feather(fold)
+    print('load features...')
     df = pd.read_feather('./data/features.feather')
+    print('split...')
     test = df[pd.isnull(df['TARGET'])].reset_index(drop=True)
     df = df[~pd.isnull(df['TARGET'])].reset_index(drop=True)
     train = df[~df['SK_ID_CURR'].isin(fold['SK_ID_CURR'])].reset_index(drop=True)
@@ -28,6 +30,7 @@ def train(idx, importance_summay):
     train, valid, test = load(idx)
     gc.collect()
 
+    print('train...')
     train_y = train.pop('TARGET')
     valid_y = valid.pop('TARGET')
     features = train.columns.values.tolist()

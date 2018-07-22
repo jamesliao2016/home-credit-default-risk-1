@@ -1,18 +1,18 @@
 import pandas as pd
-from utility import one_hot_encoder
+from utility import reduce_memory
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 220)
 
 
 def aggregate_bb():
     bb = pd.read_feather('./data/bureau_balance.preprocessed.feather')
-    bb, _ = one_hot_encoder(bb)
-
-    bb = bb.drop(['MONTHS_BALANCE'], axis=1)
 
     # aggregate
     grp = bb.groupby('SK_ID_BUREAU')
-    g = grp.agg(['mean', 'std', 'sum', 'min', 'max', 'nunique'])
+    g = grp.agg({
+        'DPD': ['mean', 'std', 'sum', 'min', 'max'],
+        'STATUS': ['nunique'],
+    })
     g.columns = [a + "_" + b.upper() for a, b in g.columns]
 
     # edge
@@ -21,6 +21,8 @@ def aggregate_bb():
     agg = g.join(edge, on='SK_ID_BUREAU')
 
     agg.columns = ["BB_" + c for c in agg.columns]
+
+    reduce_memory(agg)
 
     return agg.reset_index()
 

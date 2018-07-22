@@ -4,7 +4,7 @@ data/bureau_balance.preprocessed.feather: data/bureau_balance.feather preprocess
 data/bb.edge.feather: data/bureau_balance.preprocessed.feather create_edge_bb.py
 	python create_edge_bb.py
 
-data/bureau_balance.agg.feather: data/bureau_balance.preprocessed.feather aggregate_bb.py
+data/bb.agg.feather: data/bureau_balance.preprocessed.feather data/bb.edge.feather aggregate_bb.py
 	python aggregate_bb.py
 
 data/bureau.preprocessed.feather: data/bureau_balance.agg.feather preprocess_bureau.py

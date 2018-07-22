@@ -1,5 +1,5 @@
 import pandas as pd
-from utility import one_hot_encoder
+from utility import one_hot_encoder, reduce_memory
 pd.set_option("display.max_columns", 100)
 
 
@@ -83,8 +83,9 @@ def preprocess_prev():
 
 
 def main():
-    pre_agg = preprocess_prev()
-    pre_agg.to_feather('./data/previous_application.agg.feather')
+    agg = preprocess_prev()
+    reduce_memory(agg)
+    agg.to_feather('./data/previous_application.agg.feather')
 
 
 if __name__ == '__main__':

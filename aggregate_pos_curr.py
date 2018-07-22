@@ -1,5 +1,6 @@
 import pandas as pd
 from aggregate_pos import aggregate_pos
+from utility import reduce_memory
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 
@@ -26,8 +27,9 @@ def aggregate_pos_curr():
 
 
 def main():
-    pos_agg = aggregate_pos_curr()
-    pos_agg.to_feather('./data/POS_CASH_balance.agg.curr.feather')
+    agg = aggregate_pos_curr()
+    reduce_memory(agg)
+    agg.to_feather('./data/POS_CASH_balance.agg.curr.feather')
 
 
 if __name__ == '__main__':

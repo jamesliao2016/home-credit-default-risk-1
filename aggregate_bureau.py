@@ -8,7 +8,16 @@ def aggregate_bureau():
     columns = [c for c in df.columns if df[c].dtype != 'object']
     df = df[columns]
 
-    a = ['mean', 'std', 'sum', 'min', 'max', 'nunique']
+    a = {}
+    for c in columns:
+        if c == 'SK_ID_CURR':
+            continue
+        if df[c].dtype == 'int64':
+            a[c] = ['mean', 'std', 'sum', 'min', 'max', 'nunique']
+            df[c] = df[c].astype('int32')
+        else:
+            a[c] = ['mean', 'std', 'sum', 'min', 'max']
+            df[c] = df[c].astype('float32')
 
     grp = df.groupby('SK_ID_CURR')
     g = grp.agg(a)

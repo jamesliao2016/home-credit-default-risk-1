@@ -4,7 +4,7 @@ pd.set_option("display.width", 220)
 
 
 def main():
-    bb = pd.read_feather('./data/bureau_balance.preprocessed.feather')
+    bb = pd.read_feather('./data/bb.preprocessed.feather')
     bb = bb.sort_values(['SK_ID_BUREAU', 'MONTHS_BALANCE'])
 
     grp = bb.groupby(['SK_ID_BUREAU'])

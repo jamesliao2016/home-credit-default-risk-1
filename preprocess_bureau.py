@@ -1,5 +1,4 @@
 import pandas as pd
-from preprocess_bb import is_bad, is_good
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 200)
 
@@ -23,37 +22,37 @@ def preprocess_bureau():
     df = df.sort_values(
         ['SK_ID_CURR', 'DAYS_CREDIT'],
     ).reset_index(drop=True)
-    df['DAYS_CREDIT_ENDDATE_PLUS'] = (
-        df['DAYS_CREDIT_ENDDATE'] >= 0).astype('i')
-    df['AMT_CREDIT_SUM'].fillna(0, inplace=True)
-    df['AMT_CREDIT_SUM_DEBT'].fillna(0, inplace=True)
-    df['AMT_CREDIT_SUM_OVERDUE'].fillna(0, inplace=True)
-    df['AMT_CREDIT_SUM_LIMIT'].fillna(0, inplace=True)
-    df['CNT_CREDIT_PROLONG'].fillna(0, inplace=True)
-    df['AMT_ANNUITY'].fillna(0, inplace=True)
-    df['BB_COUNT'].fillna(0, inplace=True)
-    df['BB_STATUS_NUNIQUE'].fillna(0, inplace=True)
-    df['BB_GOOD_STATUS_MEAN'].fillna(1, inplace=True)
-    df['BB_BAD_STATUS_MEAN'].fillna(0, inplace=True)
-    df['BB_TERM'].fillna(0, inplace=True)
+
+    df.drop(['SK_ID_BUREAU'], axis=1)
     add_diff(df)
-    df['DIFF_ENDDATE'] = df['DAYS_ENDDATE_FACT'] - df['DAYS_CREDIT_ENDDATE']
-    df['GOOD_BB_LAST_STATUS'] = df['BB_LAST_STATUS'].apply(is_good).astype('i')
-    df['BAD_BB_LAST_STATUS'] = df['BB_LAST_STATUS'].apply(is_bad).astype('i')
     return df
+
+
+def load_bure():
+    bure = pd.read_feather('./data/bureau.feather')
+    bure['FINISHED'] = (bure['DAYS_ENDDATE_FACT'] <= 0).astype('i')
+    indexer = pd.isnull(bure['DAYS_CREDIT_ENDDATE'])
+    bure.loc[indexer, 'DAYS_CREDIT_ENDDATE'] = bure.loc[indexer, 'DAYS_ENDDATE_FACT']
+    bure['DIFF_ENDDATE'] = bure['DAYS_ENDDATE_FACT'] - bure['DAYS_CREDIT_ENDDATE']
+    bure['TERM'] = bure['DAYS_CREDIT_ENDDATE'] - bure['DAYS_CREDIT']
+    bure['AMT_CREDIT_SUM_OVERDUE'].fillna(0, inplace=True)
+    bure['AMT_CREDIT_SUM'].fillna(0, inplace=True)
+    bure['AMT_CREDIT_SUM_DEBT'].fillna(0, inplace=True)
+    bure['CNT_CREDIT_PROLONG'].fillna(0, inplace=True)
+    bure['AMT_ANNUITY'].fillna(0, inplace=True)
+    return bure
 
 
 def join_bb():
-    df = pd.read_feather('./data/bureau.feather')
-    agg = pd.read_feather('./data/bureau_balance.agg.feather')
-    df = df.merge(agg, on='SK_ID_BUREAU', how='left')
-    del df['SK_ID_BUREAU']
-    return df
+    bure = load_bure()
+    bb = pd.read_feather('./data/bb.agg.feather')
+    bure = bure.merge(bb, on='SK_ID_BUREAU', how='left')
+    return bure
 
 
 def main():
-    bure_df = preprocess_bureau()
-    bure_df.to_feather('data/bureau.preprocessed.feather')
+    bure = preprocess_bureau()
+    bure.to_feather('data/bureau.preprocessed.feather')
 
 
 if __name__ == '__main__':

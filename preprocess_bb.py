@@ -32,7 +32,7 @@ def preprocess_bb():
 
 def main():
     bb = preprocess_bb()
-    bb.to_feather('./data/bureau_balance.preprocessed.feather')
+    bb.to_feather('./data/bb.preprocessed.feather')
 
 
 if __name__ == '__main__':

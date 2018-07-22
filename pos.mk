@@ -13,3 +13,6 @@ data/POS_CASH_balance.agg.prev.last.feather: data/POS_CASH_balance.preprocessed.
 
 data/pos.edge.feather: data/pos.preprocessed.feather create_pos_edge.py
 	python create_pos_edge.py
+
+data/pos.edge.agg.num.feather: data/pos.edge.feather aggregate_pos_edge_num.py
+	python aggregate_pos_edge_num.py

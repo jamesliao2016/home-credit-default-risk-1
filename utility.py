@@ -73,6 +73,14 @@ def calc_2nd_order_feature(df):
     return grp
 
 
+def reduce_memory(df):
+    for c in df.columns:
+        if df[c].dtype == 'float64':
+            df[c] = df[c].astype('float32')
+        if df[c].dtype == 'int64':
+            df[c] = df[c].astype('int32')
+
+
 def reset_seed(seed=0):
     random.seed(seed)
     np.random.seed(seed)

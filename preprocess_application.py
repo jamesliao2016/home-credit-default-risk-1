@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
+from utility import reduce_memory
 pd.set_option("display.max_columns", 200)
-pd.set_option("display.max_rows", 100)
 pd.set_option("display.width", 200)
 
 
@@ -10,6 +10,7 @@ def preprocess_application():
     test_df = pd.read_feather('./data/application_test.feather')
     n_train = len(train_df)
     df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
+    reduce_memory(df)
 
     df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
 

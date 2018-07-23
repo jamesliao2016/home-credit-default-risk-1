@@ -7,20 +7,13 @@ pd.set_option("display.width", 180)
 
 
 def add_bure_features(df):
-    df['BURE_AMT_CREDIT_SUM_DEBT_SUM'].fillna(0, inplace=True)
     df['BURE_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
 
-    df['BURE_RATIO_CREDIT_DEBT'] = df['BURE_AMT_CREDIT_SUM_DEBT_SUM']
-    df['BURE_RATIO_CREDIT_DEBT'] /= (1 + df['BURE_AMT_CREDIT_SUM_SUM'])
-    df['BURE_RATIO_CREDIT_DEBT'] = df['BURE_RATIO_CREDIT_DEBT'].apply(np.tanh)
-
     df['BURE_RATIO_CREDIT_OVERDUE'] = df['BURE_AMT_CREDIT_SUM_OVERDUE_SUM']
-    df['BURE_RATIO_CREDIT_OVERDUE'] /= (1 + df['BURE_AMT_CREDIT_SUM_DEBT_SUM'])
     df['BURE_RATIO_CREDIT_OVERDUE'] = df['BURE_RATIO_CREDIT_OVERDUE'].apply(np.tanh)
 
     df['BURE_ACT_DAYS_CREDIT_MAX'].fillna(-3000, inplace=True)
 
-    df['BURE_ACT_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
     df['BURE_ACT_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
 
     return df
@@ -43,7 +36,7 @@ def add_inst_features(df):
 
 def merge_bure(df):
     print('merge bure...')
-    bure = pd.read_feather('./data/bureau.agg.feather')
+    bure = pd.read_feather('./data/bureau.agg.filtered.feather')
     df = df.merge(bure, on='SK_ID_CURR', how='left')
     df = add_bure_features(df)
 
@@ -58,6 +51,9 @@ def merge_inst(df):
     df = df.merge(inst, on='SK_ID_CURR', how='left')
     inst = pd.read_feather(
         './data/installments_payments.agg.curr.last.feather')
+    df = df.merge(inst, on='SK_ID_CURR', how='left')
+    inst = pd.read_feather(
+        './data/inst.last.k.feather')
     df = df.merge(inst, on='SK_ID_CURR', how='left')
 
     return df
@@ -127,7 +123,6 @@ def preprocess(debug):
     # fillna
     df['PREV_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
     df['PREV_AMT_CREDIT_SUM'].fillna(0, inplace=True)
-    df['BURE_ACT_AMT_ANNUITY_SUM'].fillna(0, inplace=True)
     df['BURE_ACT_AMT_CREDIT_SUM_SUM'].fillna(0, inplace=True)
 
     # calculate length
@@ -137,15 +132,9 @@ def preprocess(debug):
     df['DIFF_ANNUITY_AND_INCOME_SUM_AP'] =\
         df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM_AP']
 
-    df['ANNUITY_SUM_AB'] = df['AMT_ANNUITY'] + df['BURE_ACT_AMT_ANNUITY_SUM']
     df['CREDIT_SUM_AB'] = df['AMT_CREDIT'] + df['BURE_ACT_AMT_CREDIT_SUM_SUM']
-    df['ANNUITY_SUM_LENGTH_AB'] = df['CREDIT_SUM_AB'] / df['ANNUITY_SUM_AB']
-    df['DIFF_ANNUITY_AND_INCOME_SUM_AB'] =\
-        df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM_AB']
 
-    df['ANNUITY_SUM'] = (
-        df['AMT_ANNUITY'] + df['PREV_AMT_ANNUITY_SUM'] +
-        df['BURE_ACT_AMT_ANNUITY_SUM'])
+    df['ANNUITY_SUM'] = df['AMT_ANNUITY'] + df['PREV_AMT_ANNUITY_SUM']
     df['CREDIT_SUM'] = (
         df['AMT_CREDIT'] + df['PREV_AMT_CREDIT_SUM'] +
         df['BURE_ACT_AMT_CREDIT_SUM_SUM'])

@@ -1,34 +1,11 @@
+import numpy as np
 import pandas as pd
+from utility import reduce_memory
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 200)
 
 
-def add_diff(df):
-    ts_features = [
-        'DAYS_CREDIT',
-        'DAYS_CREDIT_ENDDATE',
-        'DAYS_ENDDATE_FACT',
-        'DAYS_CREDIT_UPDATE',
-    ]
-    grp = df.groupby('SK_ID_CURR')
-    diff = grp.diff()[ts_features]
-    diff.columns = ['TSDIFF_{}'.format(c) for c in diff.columns]
-    for c in diff.columns:
-        df[c] = diff[c]
-
-
 def preprocess_bureau():
-    df = join_bb()
-    df = df.sort_values(
-        ['SK_ID_CURR', 'DAYS_CREDIT'],
-    ).reset_index(drop=True)
-
-    df.drop(['SK_ID_BUREAU'], axis=1)
-    add_diff(df)
-    return df
-
-
-def load_bure():
     bure = pd.read_feather('./data/bureau.feather')
     bure['FINISHED'] = (bure['DAYS_ENDDATE_FACT'] <= 0).astype('i')
     indexer = pd.isnull(bure['DAYS_CREDIT_ENDDATE'])
@@ -40,13 +17,18 @@ def load_bure():
     bure['AMT_CREDIT_SUM_DEBT'].fillna(0, inplace=True)
     bure['CNT_CREDIT_PROLONG'].fillna(0, inplace=True)
     bure['AMT_ANNUITY'].fillna(0, inplace=True)
-    return bure
+    # discussion/57175
+    bure.loc[bure['DAYS_CREDIT_ENDDATE'] < -40000, 'DAYS_CREDIT_ENDDATE'] = np.nan
+    bure.loc[bure['DAYS_CREDIT_UPDATE'] < -40000, 'DAYS_CREDIT_UPDATE'] = np.nan
+    bure.loc[bure['DAYS_ENDDATE_FACT'] < -40000, 'DAYS_ENDDATE_FACT'] = np.nan
+    bure['FLAG_ACTIVE'] = (bure['CREDIT_ACTIVE'] != 'Closed').astype('int8')
+    bure['FLAG_ONGOING'] = (bure['DAYS_CREDIT_ENDDATE'] > 0).astype('int8')
 
-
-def join_bb():
-    bure = load_bure()
     bb = pd.read_feather('./data/bb.agg.feather')
     bure = bure.merge(bb, on='SK_ID_BUREAU', how='left')
+
+    bure.drop(['SK_ID_BUREAU'], axis=1)
+    reduce_memory(bure)
     return bure
 
 

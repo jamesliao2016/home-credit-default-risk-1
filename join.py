@@ -43,9 +43,7 @@ def add_inst_features(df):
 
 def merge_bure(df):
     print('merge bure...')
-    bure = pd.read_feather('./data/bureau.agg.num.feather')
-    df = df.merge(bure, on='SK_ID_CURR', how='left')
-    bure = pd.read_feather('./data/bureau.agg.cat.feather')
+    bure = pd.read_feather('./data/bureau.agg.feather')
     df = df.merge(bure, on='SK_ID_CURR', how='left')
     df = add_bure_features(df)
 

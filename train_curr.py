@@ -18,6 +18,7 @@ def load(idx):
     fold = pd.read_feather(fold)
     print('load features...')
     df = pd.read_feather('./data/features.feather')
+    print(df.shape)
     print('split...')
     test = df[pd.isnull(df['TARGET'])].reset_index(drop=True)
     df = df[~pd.isnull(df['TARGET'])].reset_index(drop=True)

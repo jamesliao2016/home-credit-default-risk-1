@@ -81,6 +81,23 @@ def reduce_memory(df):
             df[c] = df[c].astype('int32')
 
 
+def filter_by_corr(df):
+    train = pd.read_feather('./data/application_train.feather')
+    train = train[['SK_ID_CURR', 'TARGET']]
+    train = train.merge(df, on='SK_ID_CURR')
+    train = train.drop(['SK_ID_CURR'], 1)
+    corr = train.corr()[['TARGET']]
+    corr['TARGET'] = corr['TARGET'].apply(abs)
+    corr = corr.sort_values('TARGET', ascending=False)
+    print(corr)
+
+    cols = corr[corr['TARGET'] > 0.01].index.values.tolist()
+    cols.remove('TARGET')
+    if 'SK_ID_CURR' not in cols:
+        cols.append('SK_ID_CURR')
+    return df[cols]
+
+
 def reset_seed(seed=0):
     random.seed(seed)
     np.random.seed(seed)

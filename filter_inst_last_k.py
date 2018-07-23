@@ -18,7 +18,7 @@ def main():
     res = pd.concat(res, axis=1)
     print(res.head())
     res = res.reset_index()
-    res.to_feather('./data/ins.last.k.feather')
+    res.to_feather('./data/inst.last.k.feather')
 
 
 if __name__ == '__main__':

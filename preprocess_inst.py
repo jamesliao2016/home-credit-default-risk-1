@@ -13,7 +13,7 @@ def preprocess_inst():
 
     # Percentage and difference paid in each installment (amount paid and installment value) # noqa
     ins['RATIO_PAYMENT'] = ins['AMT_PAYMENT'] / ins['AMT_INSTALMENT']
-    ins['DIFF_PAYMENT'] = ins['AMT_INSTALMENT'] - ins['AMT_PAYMENT']
+    ins['DIFF_PAYMENT'] = ins['AMT_PAYMENT'] - ins['AMT_INSTALMENT']
     ins['FLAG_DIFF_PAYMENT'] = (ins['DIFF_PAYMENT'] > 0).astype('int8')
     # Days past due and days before due (no negative values)
     ins['DPD'] = ins['DAYS_ENTRY_PAYMENT'] - ins['DAYS_INSTALMENT']

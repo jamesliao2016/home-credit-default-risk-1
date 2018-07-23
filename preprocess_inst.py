@@ -1,44 +1,34 @@
 import pandas as pd
+from utility import reduce_memory
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 
 
-def add_diff(df):
-    ts_features = [
-        'DAYS_INSTALMENT',
-        'DAYS_ENTRY_PAYMENT',
-        'AMT_INSTALMENT',
-        'AMT_PAYMENT',
-    ]
-    g = df.groupby(['SK_ID_CURR', 'SK_ID_PREV'])
-    g = g[ts_features].diff()
-    for c in ts_features:
-        df['TSDIFF_{}'.format(c)] = g[c]
-
-
 def preprocess_inst():
-    ins_df = pd.read_feather('./data/installments_payments.feather')
-    ins_df = ins_df.sort_values(
+    ins = pd.read_feather('./data/installments_payments.feather')
+    ins = ins.sort_values(
         ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_INSTALMENT'])
-    add_diff(ins_df)
 
-    ins_df['IS_CREDIT'] = (ins_df['NUM_INSTALMENT_VERSION'] == 0).astype('i')
+    ins['IS_CREDIT'] = (ins['NUM_INSTALMENT_VERSION'] == 0).astype('i')
 
     # Percentage and difference paid in each installment (amount paid and installment value) # noqa
-    ins_df['RATIO_PAYMENT'] = ins_df['AMT_PAYMENT'] / ins_df['AMT_INSTALMENT']
-    ins_df['DIFF_PAYMENT'] = ins_df['AMT_INSTALMENT'] - ins_df['AMT_PAYMENT']
+    ins['RATIO_PAYMENT'] = ins['AMT_PAYMENT'] / ins['AMT_INSTALMENT']
+    ins['DIFF_PAYMENT'] = ins['AMT_INSTALMENT'] - ins['AMT_PAYMENT']
+    ins['FLAG_DIFF_PAYMENT'] = (ins['DIFF_PAYMENT'] > 0).astype('int8')
     # Days past due and days before due (no negative values)
-    ins_df['DPD'] = ins_df['DAYS_ENTRY_PAYMENT'] - ins_df['DAYS_INSTALMENT']
-    ins_df['DBD'] = ins_df['DAYS_INSTALMENT'] - ins_df['DAYS_ENTRY_PAYMENT']
-    ins_df['DPD'] = ins_df['DPD'].apply(lambda x: x if x > 0 else 0)
-    ins_df['DBD'] = ins_df['DBD'].apply(lambda x: x if x > 0 else 0)
+    ins['DPD'] = ins['DAYS_ENTRY_PAYMENT'] - ins['DAYS_INSTALMENT']
+    ins['DBD'] = ins['DAYS_INSTALMENT'] - ins['DAYS_ENTRY_PAYMENT']
+    ins['FLAG_DPD'] = (ins['DPD'] > 0).astype('int8')
+    ins['FLAG_DBD'] = (ins['DBD'] > 0).astype('int8')
 
-    return ins_df.reset_index(drop=True)
+    reduce_memory(ins)
+
+    return ins.reset_index(drop=True)
 
 
 def main():
     res = preprocess_inst()
-    res.to_feather('./data/installments_payments.preprocessed.feather')
+    res.to_feather('./data/inst.preprocessed.feather')
 
 
 if __name__ == '__main__':

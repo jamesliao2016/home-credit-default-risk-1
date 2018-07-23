@@ -1,6 +1,6 @@
 # inst
 INST := data/installments_payments.feather
-INST_PREP := data/installments_payments.preprocessed.feather
+INST_PREP := data/inst.preprocessed.feather
 INST_AGG_CURR := data/installments_payments.agg.curr.feather
 INST_AGG_LAST := data/installments_payments.agg.curr.last.feather
 

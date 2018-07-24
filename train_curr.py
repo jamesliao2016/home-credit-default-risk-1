@@ -33,7 +33,6 @@ def train(idx, importance_summay):
 
     print('train...')
     train_y = train.pop('TARGET')
-    valid_y = valid.pop('TARGET')
     features = train.columns.values.tolist()
     features.remove('SK_ID_CURR')
     xgtrain = lgb.Dataset(
@@ -41,12 +40,14 @@ def train(idx, importance_summay):
         feature_name=features,
         categorical_feature=[],
     )
+    del train
+    gc.collect()
+    valid_y = valid.pop('TARGET')
     xgvalid = lgb.Dataset(
         valid[features].values, label=valid_y.values,
         feature_name=features,
         categorical_feature=[],
     )
-    del train
     del valid
     gc.collect()
     evals_result = {}

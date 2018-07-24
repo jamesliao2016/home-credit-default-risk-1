@@ -70,13 +70,14 @@ def merge_prev(df):
 
 
 def merge_cred(df):
-    print('merge cred...')
-    cred = pd.read_feather(
-        './data/credit_card_balance.agg.curr.feather')
-    df = df.merge(cred, on='SK_ID_CURR', how='left')
-    cred = pd.read_feather(
-        './data/credit_card_balance.agg.curr.last.feather')
-    df = df.merge(cred, on='SK_ID_CURR', how='left')
+    for fname in [
+        './data/credit_card_balance.agg.curr.feather',
+        './data/credit_card_balance.agg.curr.last.feather',
+        './data/credit.agg.diff.feather',
+    ]:
+        print('merge {}...'.format(fname))
+        cred = pd.read_feather(fname)
+        df = df.merge(cred, on='SK_ID_CURR', how='left')
     return df
 
 

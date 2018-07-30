@@ -13,3 +13,6 @@ data/pos.edge.agg.num.feather: data/pos.edge.feather aggregate_pos_edge_num.py
 
 data/pos.edge.agg.cat.feather: data/pos.edge.feather aggregate_pos_edge_cat.py
 	python aggregate_pos_edge_cat.py
+
+data/pos.diff.feather: data/pos.preprocessed.feather create_pos_diff.py
+	python create_pos_diff.py

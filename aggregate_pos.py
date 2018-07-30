@@ -14,10 +14,6 @@ def _aggregate():
         'SK_DPD_DEF': fs,
         # preprocessed
         'RATIO_CNT_INST': ['max', 'min'],
-        'DIFF_CNT_INSTALMENT': ['mean', 'std', 'max', 'min'],
-        'DIFF_CNT_INSTALMENT_FUTURE': ['mean', 'std', 'max', 'min'],
-        'DIFF_SK_DPD': ['min', 'max'],
-        'DIFF_SK_DPD_DEF': ['min', 'max'],
     }
     g = grp.agg(agg)
     g.columns = ['{}_{}'.format(a, b.upper()) for a, b in g.columns]

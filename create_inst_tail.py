@@ -1,11 +1,12 @@
 import pandas as pd
 from utility import reduce_memory
+from concurrent.futures import ProcessPoolExecutor
 
 
 def last_k(k):
-    print('create inst last {}...'.format(k))
+    print('create inst tail {}...'.format(k))
     ins = pd.read_feather('./data/inst.preprocessed.feather')
-    ins.sort_values(['SK_ID_CURR', 'DAYS_INSTALMENT'], inplace=True)
+    ins = ins.sort_values(['SK_ID_CURR', 'DAYS_INSTALMENT'])
     ins = ins.groupby('SK_ID_CURR').tail(k).reset_index(drop=True)
     grp = ins.groupby('SK_ID_CURR')
 
@@ -22,13 +23,15 @@ def last_k(k):
     g.columns = ['INST_LAST_{}_{}'.format(k, c) for c in g.columns]
     reduce_memory(g)
 
-    return g.reset_index()
+    return g
 
 
 def main():
-    for k in [1, 5, 10, 20, 50, 100]:
-        res = last_k(k)
-        res.to_feather('./data/inst.last.{}.feather'.format(k))
+    res = []
+    with ProcessPoolExecutor() as executor:
+        res = executor.map(last_k, [1, 5, 10, 20, 50])
+    res = pd.concat(res, axis=1).reset_index()
+    res.to_feather('./data/inst.tail.feather')
 
 
 if __name__ == '__main__':

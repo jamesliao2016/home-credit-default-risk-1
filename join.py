@@ -34,6 +34,14 @@ def add_inst_features(df):
     return df
 
 
+def merge_app(df):
+    print('merge app...')
+    app = pd.read_feather('./data/app.agg.feather')
+    df = df.merge(app, on='SK_ID_CURR', how='left')
+
+    return df
+
+
 def merge_bure(df):
     print('merge bure...')
     bure = pd.read_feather('./data/bureau.agg.feather')
@@ -108,6 +116,8 @@ def preprocess(debug):
 
     df = pd.concat([train, test], sort=False)
 
+    df = merge_app(df)
+    gc.collect()
     df = merge_bure(df)
     gc.collect()
     df = merge_prev(df)

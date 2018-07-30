@@ -57,7 +57,7 @@ def merge_inst(df):
         './data/installments_payments.agg.curr.last.feather',
         './data/inst.tail.feather',
     ]:
-        inst = pd.read_feeather(fname)
+        inst = pd.read_feather(fname)
         df = df.merge(inst, on='SK_ID_CURR', how='left')
         print('merge {}...'.format(fname))
 

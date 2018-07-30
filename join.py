@@ -44,17 +44,16 @@ def merge_bure(df):
 
 
 def merge_inst(df):
-    print('merge inst...')
-    inst = pd.read_feather(
-        './data/installments_payments.agg.curr.feather')
-    inst = add_inst_features(inst)
-    df = df.merge(inst, on='SK_ID_CURR', how='left')
-    inst = pd.read_feather(
-        './data/installments_payments.agg.curr.last.feather')
-    df = df.merge(inst, on='SK_ID_CURR', how='left')
-    inst = pd.read_feather(
-        './data/inst.tail.feather')
-    df = df.merge(inst, on='SK_ID_CURR', how='left')
+    for fname in [
+        './data/installments_payments.agg.curr.feather',
+        './data/installments_payments.agg.curr.last.feather',
+        './data/inst.tail.feather',
+    ]:
+        inst = pd.read_feeather(fname)
+        df = df.merge(inst, on='SK_ID_CURR', how='left')
+        print('merge {}...'.format(fname))
+
+    df = add_inst_features(df)
 
     return df
 

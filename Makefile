@@ -5,7 +5,7 @@ include ./feather.mk
 include ./bureau.mk
 include ./pos.mk
 include ./inst.mk
-include ./cred.mk
+include ./credit.mk
 
 APP_PREP_DSTS := data/application_test.preprocessed.feather data/application_train.preprocessed.feather
 

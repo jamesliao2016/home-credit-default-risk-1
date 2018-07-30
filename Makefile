@@ -2,6 +2,7 @@ default:
 	echo "do nothing"
 
 include ./feather.mk
+include ./app.mk
 include ./bureau.mk
 include ./pos.mk
 include ./inst.mk

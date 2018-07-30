@@ -7,11 +7,6 @@ def aggregate_bureau():
     df = pd.read_feather('./data/bureau.preprocessed.feather')
     grp = df.groupby('SK_ID_CURR')
 
-    # count
-    g = grp[['DAYS_CREDIT']].count()
-    g.rename(columns={'DAYS_CREDIT': 'COUNT'}, inplace=True)
-    f = g
-
     # agg
     agg = {
         # cat
@@ -39,7 +34,8 @@ def aggregate_bureau():
 
     g = grp.agg(agg)
     g.columns = [x + "_" + y.upper() for x, y in g.columns]
-    f = f.join(g, on='SK_ID_CURR', how='left')
+    g['COUNT'] = grp.size()
+    f = g
 
     # discussion/57175
     f['RATIO_COUNT_PER_TYPE'] = f['COUNT'] / f['CREDIT_TYPE_NUNIQUE']
@@ -50,17 +46,20 @@ def aggregate_bureau():
 
     # Bureau: Active credits
     act = df[df['FLAG_ACTIVE'] == 1]
-    g = act.groupby('SK_ID_CURR').agg(agg)
+    g = act.groupby('SK_ID_CURR').agg({
+        'DAYS_CREDIT': ['mean', 'std', 'sum', 'min', 'max'],
+        'AMT_CREDIT_SUM': ['mean', 'std', 'sum', 'min', 'max'],
+    })
     g.columns = [x + "_" + y.upper() for x, y in g.columns]
     g.columns = ['ACT_{}'.format(c) for c in g.columns]
     f = f.join(g, on='SK_ID_CURR', how='left')
 
-    # # Bureau: Closed credits
-    clo = df[df['FLAG_ACTIVE'] == 0]
-    g = clo.groupby('SK_ID_CURR').agg(agg)
-    g.columns = [x + "_" + y.upper() for x, y in g.columns]
-    g.columns = ['CLO_{}'.format(c) for c in g.columns]
-    f = f.join(g, on='SK_ID_CURR', how='left')
+    # # # Bureau: Closed credits
+    # clo = df[df['FLAG_ACTIVE'] == 0]
+    # g = clo.groupby('SK_ID_CURR').agg(agg)
+    # g.columns = [x + "_" + y.upper() for x, y in g.columns]
+    # g.columns = ['CLO_{}'.format(c) for c in g.columns]
+    # f = f.join(g, on='SK_ID_CURR', how='left')
 
     f.columns = ['BURE_{}'.format(c) for c in f.columns]
 

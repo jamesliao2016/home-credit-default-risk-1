@@ -1,16 +1,10 @@
-from utility import one_hot_encoder
+import pandas as pd
+from utility import reduce_memory
 
 
-def aggregate_pos(df, key):
-    # count
-    grp = df.groupby(key)
-    g = grp[['MONTHS_BALANCE']].count()
-    g.columns = ['COUNT']
-    pos_agg = g
-
-    # aggregate
-    df, cat_columns = one_hot_encoder(df)
-    grp = df.groupby(key)
+def _aggregate():
+    df = pd.read_feather('./data/pos.preprocessed.feather')
+    grp = df.groupby('SK_ID_CURR')
     fs = ['sum', 'median', 'mean', 'std', 'max', 'min']
     agg = {
         # original
@@ -25,10 +19,20 @@ def aggregate_pos(df, key):
         'DIFF_SK_DPD': ['min', 'max'],
         'DIFF_SK_DPD_DEF': ['min', 'max'],
     }
-    for c in cat_columns:
-        agg[c] = ['mean']
     g = grp.agg(agg)
     g.columns = ['{}_{}'.format(a, b.upper()) for a, b in g.columns]
-    pos_agg = pos_agg.join(g, on=key, how='left')
+    g['COUNT'] = grp.size()
 
-    return pos_agg
+    g.columns = ['POS_{}'.format(c) for c in g.columns]
+
+    return g.reset_index()
+
+
+def main():
+    agg = _aggregate()
+    reduce_memory(agg)
+    agg.to_feather('./data/pos.agg.feather')
+
+
+if __name__ == '__main__':
+    main()

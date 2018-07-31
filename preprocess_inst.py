@@ -6,9 +6,6 @@ pd.set_option("display.width", 180)
 
 def preprocess_inst():
     ins = pd.read_feather('./data/installments_payments.feather')
-    ins = ins.sort_values(
-        ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_INSTALMENT'])
-
     ins['IS_CREDIT'] = (ins['NUM_INSTALMENT_VERSION'] == 0).astype('i')
 
     # Percentage and difference paid in each installment (amount paid and installment value) # noqa
@@ -23,7 +20,7 @@ def preprocess_inst():
 
     reduce_memory(ins)
 
-    return ins.reset_index(drop=True)
+    return ins
 
 
 def main():

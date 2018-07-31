@@ -31,21 +31,9 @@ def aggregate_credit(df, key):
         'CNT_INSTALMENT_MATURE_CUM': fs,
         'SK_DPD': fs,
         'SK_DPD_DEF': fs,
-        'DIFF_AMT_BALANCE': fs,
-        'DIFF_AMT_CREDIT_LIMIT_ACTUAL': fs,
-        'DIFF_AMT_INST_MIN_REGULARITY': fs,
-        'DIFF_AMT_PAYMENT_TOTAL_CURRENT': fs,
-        'DIFF_AMT_RECEIVABLE_PRINCIPAL': fs,
-        'DIFF_AMT_TOTAL_RECEIVABLE': fs,
-        'DIFF_CNT_INSTALMENT_MATURE_CUM': fs,
-        'DIFF_SK_DPD': fs,
-        'DIFF_SK_DPD_DEF': fs,
         'RATIO_PAYED': fs,
         'FAIL_PAY_TO_PRINCIPAL': fs,
         'FAIL_PAY_TO_TOTAL': fs,
-        'DIFF_PAYMENT_TOTAL_AND_PLAIN': fs,
-        'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': fs,
-        'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': fs,
     }
     g = grp.agg(a)
     g.columns = ['{}_{}'.format(x, y.upper()) for x, y in g.columns]

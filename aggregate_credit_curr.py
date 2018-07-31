@@ -7,7 +7,7 @@ pd.set_option("display.width", 180)
 
 def aggregate_credit_by_curr_id():
     df = pd.read_feather(
-        './data/credit_card_balance.preprocessed.feather')
+        './data/credit.preprocessed.feather')
     del df['SK_ID_PREV']
     df = df.sort_values(['SK_ID_CURR', 'MONTHS_BALANCE'])
 
@@ -27,7 +27,7 @@ def aggregate_credit_by_curr_id():
 def main():
     agg = aggregate_credit_by_curr_id()
     agg.to_feather(
-        './data/credit_card_balance.agg.curr.feather')
+        './data/credit.agg.feather')
 
 
 if __name__ == '__main__':

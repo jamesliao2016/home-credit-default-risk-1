@@ -8,7 +8,10 @@ def preprocess_pos():
     df = pd.read_feather('./data/POS_CASH_balance.feather')
 
     # add features
-    df['RATIO_CNT_INST'] = df['CNT_INSTALMENT_FUTURE'] / df['CNT_INSTALMENT']
+    df['FLAG_COMPLETED'] = (df['NAME_CONTRACT_STATUS'] == 'Completed').astype(int)
+    df['FLAG_LATE'] = (df['SK_DPD'] > 0).astype(int)
+    df['FLAG_LATE_DEF'] = (df['SK_DPD_DEF'] > 0).astype(int)
+    df['RATIO_CNT_INST'] = df['CNT_INSTALMENT_FUTURE'] / (1+df['CNT_INSTALMENT'])
 
     return df
 

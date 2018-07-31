@@ -14,6 +14,8 @@ def _aggregate():
         'SK_DPD_DEF': fs,
         # preprocessed
         'RATIO_CNT_INST': ['max', 'min'],
+        'FLAG_RATE': ['sum', 'mean'],
+        'FLAG_RATE_DEF': ['sum', 'mean'],
     }
     g = grp.agg(agg)
     g.columns = ['{}_{}'.format(a, b.upper()) for a, b in g.columns]

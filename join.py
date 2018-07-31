@@ -79,7 +79,7 @@ def merge_prev(df):
 def merge_cred(df):
     for fname in [
         './data/credit.agg.feather',
-        './data/credit_card_balance.agg.curr.last.feather',
+        './data/credit.last.feather',
         './data/credit.diff.feather',
     ]:
         print('merge {}...'.format(fname))

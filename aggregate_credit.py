@@ -1,11 +1,12 @@
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.width", 180)
 
 
-def aggregate_credit(df, key):
-    grp = df.groupby(key)
+def _aggregate():
+    df = pd.read_feather('./data/credit.preprocessed.feather')
 
-    g = grp[['MONTHS_BALANCE']].count()
-    g.columns = ['COUNT']
-    agg = g
+    grp = df.groupby('SK_ID_CURR')
 
     fs = ['mean', 'std', 'min', 'max', 'nunique']
     a = {
@@ -37,13 +38,24 @@ def aggregate_credit(df, key):
     }
     g = grp.agg(a)
     g.columns = ['{}_{}'.format(x, y.upper()) for x, y in g.columns]
-    agg = agg.join(g, on=key, how='left')
+    g['COUNT'] = grp.size()
+    agg = g
 
     # another features
-    agg['MAX_RATIO_INSTALMENT'] =\
-        agg['CNT_INSTALMENT_MATURE_CUM_MAX'] / agg['COUNT']
+    agg['MAX_RATIO_INSTALMENT'] = agg['CNT_INSTALMENT_MATURE_CUM_MAX'] / agg['COUNT']
+
+    agg.columns = ['CRED_{}'.format(c) for c in agg.columns]
 
     # TODO: diff by max-min
     # TODO: handle NAME_CONTRACT_STATUS
 
-    return agg
+    return agg.reset_index()
+
+
+def main():
+    agg = _aggregate()
+    agg.to_feather('./data/credit.agg.feather')
+
+
+if __name__ == '__main__':
+    main()

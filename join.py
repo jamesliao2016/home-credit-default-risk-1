@@ -91,7 +91,8 @@ def merge_cred(df):
 def merge_pos(df):
     print('merge pos...')
     for fname in [
-        './data/POS_CASH_balance.agg.curr.feather',
+        './data/pos.agg.feather',
+        './data/pos.diff.feather',
         './data/POS_CASH_balance.agg.curr.last.feather',
         './data/pos.edge.agg.num.feather',
         './data/pos.edge.agg.cat.feather',

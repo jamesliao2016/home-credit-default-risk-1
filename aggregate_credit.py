@@ -8,7 +8,7 @@ def _aggregate():
 
     grp = df.groupby('SK_ID_CURR')
 
-    fs = ['mean', 'std', 'min', 'max', 'nunique']
+    fs = ['mean', 'std', 'min', 'max', 'sum']
     a = {
         'RATIO_USED_LIMIT': fs,
         'SK_DPD_PLUS': fs,
@@ -35,6 +35,9 @@ def _aggregate():
         'RATIO_PAYED': fs,
         'FAIL_PAY_TO_PRINCIPAL': fs,
         'FAIL_PAY_TO_TOTAL': fs,
+        'DIFF_PAYMENT_TOTAL_AND_PLAIN': fs,
+        'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': fs,
+        'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': fs,
     }
     g = grp.agg(a)
     g.columns = ['{}_{}'.format(x, y.upper()) for x, y in g.columns]

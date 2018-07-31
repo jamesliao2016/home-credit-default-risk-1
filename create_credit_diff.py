@@ -17,15 +17,25 @@ def main():
 
     grp = df.groupby('SK_ID_CURR')
     agg = grp.agg({
-        'AMT_BALANCE': ['mean'],
-        # 'AMT_CREDIT_LIMIT_ACTUAL': ['mean'],
-        # 'AMT_INST_MIN_REGULARITY': ['mean'],
-        # 'AMT_PAYMENT_TOTAL_CURRENT': ['mean'],
-        # 'AMT_RECEIVABLE_PRINCIPAL': ['mean'],
-        # 'AMT_TOTAL_RECEIVABLE': ['mean'],
-        # 'CNT_INSTALMENT_MATURE_CUM': ['mean'],
-        # 'SK_DPD': ['mean'],
-        # 'SK_DPD_DEF': ['mean'],
+        'AMT_BALANCE': ['mean', 'sum'],
+        'AMT_DRAWINGS_CURRENT': ['mean', 'sum'],
+        'AMT_DRAWINGS_ATM_CURRENT': ['mean', 'sum'],
+        'AMT_DRAWINGS_POS_CURRENT': ['mean', 'sum'],
+        'AMT_DRAWINGS_OTHER_CURRENT': ['mean', 'sum'],
+        'AMT_CREDIT_LIMIT_ACTUAL': ['mean', 'sum'],
+        'AMT_INST_MIN_REGULARITY': ['mean', 'sum'],
+        'AMT_PAYMENT_TOTAL_CURRENT': ['mean', 'sum'],
+        'AMT_RECEIVABLE_PRINCIPAL': ['mean', 'sum'],
+        'AMT_TOTAL_RECEIVABLE': ['mean', 'sum'],
+        'CNT_INSTALMENT_MATURE_CUM': ['mean', 'sum'],
+        'SK_DPD': ['mean', 'sum'],
+        'SK_DPD_DEF': ['mean', 'sum'],
+        # added
+        'FAIL_PAY_TO_TOTAL': ['mean'],
+        'FAIL_PAY_TO_PRINCIPAL': ['mean'],
+        'DIFF_PAYMENT_TOTAL_AND_PLAIN': ['mean', 'sum'],
+        'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': ['mean', 'sum'],
+        'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': ['mean', 'sum'],
     })
     agg.columns = [a + "_" + b.upper() for a, b in agg.columns]
     agg.columns = ["CRED_DIFF" + c for c in agg.columns]

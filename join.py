@@ -93,6 +93,8 @@ def merge_pos(df):
     for fname in [
         './data/pos.agg.feather',
         './data/pos.diff.feather',
+        './data/pos.tail.feather',
+        './data/pos.trend.feather',
         './data/POS_CASH_balance.agg.curr.last.feather',
         './data/pos.edge.agg.num.feather',
         './data/pos.edge.agg.cat.feather',

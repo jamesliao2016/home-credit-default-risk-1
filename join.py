@@ -95,7 +95,6 @@ def merge_pos(df):
         './data/pos.diff.feather',
         './data/pos.tail.feather',
         './data/pos.trend.feather',
-        './data/POS_CASH_balance.agg.curr.last.feather',
         './data/pos.last.feather',
     ]:
         gc.collect()

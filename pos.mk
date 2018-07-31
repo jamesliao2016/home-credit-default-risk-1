@@ -19,3 +19,6 @@ data/pos.diff.feather: data/pos.preprocessed.feather create_pos_diff.py
 
 data/pos.tail.feather: data/pos.preprocessed.feather create_pos_tail.py
 	python create_pos_tail.py
+
+data/pos.last.feather: data/pos.preprocessed.feather create_pos_last.py
+	python create_pos_last.py

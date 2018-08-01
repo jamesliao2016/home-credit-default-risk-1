@@ -28,9 +28,6 @@ def add_inst_features(df):
     df['INS_DBD_MAX'].fillna(0, inplace=True)
     df['INS_DBD_MAX'] = df['INS_DBD_MAX'].apply(np.tanh)
 
-    df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'].fillna(0, inplace=True)
-    df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'] = df['INS_TSDIFF_DAYS_ENTRY_PAYMENT_STD'].apply(np.tanh)
-
     return df
 
 
@@ -53,8 +50,8 @@ def merge_bure(df):
 
 def merge_inst(df):
     for fname in [
-        './data/installments_payments.agg.curr.feather',
-        './data/installments_payments.agg.curr.last.feather',
+        './data/inst.agg.feather',
+        './data/inst.last.feather',
         './data/inst.tail.feather',
         './data/inst.diff.feather',
     ]:

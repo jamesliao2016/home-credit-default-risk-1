@@ -1,7 +1,10 @@
+import gc
 import random
 import chainer
 import numpy as np
 import pandas as pd
+from sklearn.feature_selection import SelectFromModel
+from lightgbm import LGBMClassifier
 
 
 def factorize(df):
@@ -103,3 +106,38 @@ def reset_seed(seed=0):
     np.random.seed(seed)
     if chainer.cuda.available:
         chainer.cuda.cupy.random.seed(seed)
+
+
+def filter_by_lgb(df, thres=3.00):
+    print(df.shape)
+    orig = df.copy()
+    lgbc = LGBMClassifier(
+        objective='binary', n_estimators=500, learning_rate=0.1, num_leaves=20,
+        subsample=1.0, colsample_bytree=1.0, reg_alpha=100, reg_lambda=100, min_split_gain=0.01,
+        min_child_weight=40, n_jobs=12,
+        random_state=215, silent=False,
+    )
+
+    if 'TARGET' in df.columns:
+        df = df.drop(['TARGET'], axis=1)
+
+    factorize(df)
+
+    train = pd.read_feather('./data/application_train.feather')
+    train = train[['SK_ID_CURR', 'TARGET']]
+    gc.collect()
+
+    df = df.merge(train, on='SK_ID_CURR')
+    y = df.pop('TARGET')
+
+    embeded_lgb_selector = SelectFromModel(lgbc, threshold='{}*median'.format(thres))
+    embeded_lgb_selector.fit(df, y)
+    embeded_lgb_support = embeded_lgb_selector.get_support()
+    embeded_lgb_feature = df.loc[:, embeded_lgb_support].columns.tolist()
+    print(str(len(embeded_lgb_feature)), 'selected features')
+    if 'SK_ID_CURR' not in embeded_lgb_feature:
+        embeded_lgb_feature.append('SK_ID_CURR')
+    if 'TARGET' in orig.columns:
+        embeded_lgb_feature.append('TARGET')
+    print(embeded_lgb_feature, len(embeded_lgb_feature))
+    return orig[embeded_lgb_feature]

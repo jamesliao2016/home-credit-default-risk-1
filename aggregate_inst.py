@@ -1,16 +1,27 @@
 import pandas as pd
-from utility import reduce_memory, filter_by_lgb
+from utility import reduce_memory
 
 
 def _aggregate():
     df = pd.read_feather('./data/inst.preprocessed.feather')
-    # Features: Perform aggregations
-    agg = {}
-    for c in df.columns:
-        if df[c].dtype == 'object':
-            agg[c] = ['nunique', 'mode']
-        else:
-            agg[c] = ['min', 'max', 'mean', 'sum', 'std']
+    agg = {
+        # original
+        'NUM_INSTALMENT_VERSION': ['nunique'],
+        'NUM_INSTALMENT_NUMBER': ['max'],
+        'AMT_INSTALMENT': ['min', 'max', 'mean', 'sum'],
+        'AMT_PAYMENT': ['min', 'max', 'mean', 'sum', 'std'],
+        'DAYS_ENTRY_PAYMENT': ['sum', 'max', 'min'],
+        'DAYS_INSTALMENT': ['sum', 'max', 'min'],
+        # preprocessed
+        'RATIO_PAYMENT': ['max', 'min', 'mean', 'std'],
+        'DIFF_PAYMENT': ['max', 'min', 'mean', 'sum', 'std'],
+        'FLAG_DIFF_PAYMENT': ['mean'],
+        'DPD': ['max', 'mean', 'sum'],
+        'DBD': ['max', 'mean', 'sum'],
+        'IS_CREDIT': ['mean'],
+        'FLAG_DPD': ['mean'],
+        'FLAG_DBD': ['mean'],
+    }
 
     grp = df.groupby('SK_ID_CURR')
 
@@ -28,7 +39,6 @@ def _aggregate():
 
 def main():
     agg = _aggregate()
-    agg = filter_by_lgb(agg)
     reduce_memory(agg)
     agg.to_feather('./data/inst.agg.feather')
 

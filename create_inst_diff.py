@@ -1,5 +1,5 @@
 import pandas as pd
-from utility import one_hot_encoder, reduce_memory, filter_by_corr
+from utility import one_hot_encoder, reduce_memory
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 220)
 
@@ -22,8 +22,6 @@ def main():
     agg.columns = ["INST_DIFF_{}".format(c) for c in agg.columns]
     agg = agg.reset_index()
 
-    agg = filter_by_corr(agg)
-    print(agg.shape)
     reduce_memory(agg)
 
     agg.to_feather('./data/inst.diff.feather')

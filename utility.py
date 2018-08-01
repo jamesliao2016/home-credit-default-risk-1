@@ -4,7 +4,7 @@ import chainer
 import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectFromModel
-from lightgbm import LGBMClassifier
+import lightgbm as lgb
 
 
 def factorize(df):
@@ -111,13 +111,6 @@ def reset_seed(seed=0):
 def filter_by_lgb(df, thres=3.00):
     print(df.shape)
     orig = df.copy()
-    lgbc = LGBMClassifier(
-        objective='binary', n_estimators=500, learning_rate=0.1, num_leaves=20,
-        subsample=1.0, colsample_bytree=1.0, reg_alpha=100, reg_lambda=100, min_split_gain=0.01,
-        min_child_weight=40, n_jobs=12,
-        random_state=215, silent=False,
-    )
-
     if 'TARGET' in df.columns:
         df = df.drop(['TARGET'], axis=1)
 
@@ -128,16 +121,56 @@ def filter_by_lgb(df, thres=3.00):
     gc.collect()
 
     df = df.merge(train, on='SK_ID_CURR')
+    del df['SK_ID_CURR']
     y = df.pop('TARGET')
 
-    embeded_lgb_selector = SelectFromModel(lgbc, threshold='{}*median'.format(thres))
-    embeded_lgb_selector.fit(df, y)
-    embeded_lgb_support = embeded_lgb_selector.get_support()
-    embeded_lgb_feature = df.loc[:, embeded_lgb_support].columns.tolist()
-    print(str(len(embeded_lgb_feature)), 'selected features')
-    if 'SK_ID_CURR' not in embeded_lgb_feature:
-        embeded_lgb_feature.append('SK_ID_CURR')
-    if 'TARGET' in orig.columns:
-        embeded_lgb_feature.append('TARGET')
-    print(embeded_lgb_feature, len(embeded_lgb_feature))
-    return orig[embeded_lgb_feature]
+    xgtrain = lgb.Dataset(
+        df.values, label=y.values,
+        feature_name=df.columns.values.tolist(),
+        categorical_feature=[],
+    )
+
+    lgb_params = {
+        'boosting_type': 'gbdt',
+        'objective': 'binary',
+        'metric': 'auc',
+        'learning_rate': 0.2,
+        'num_leaves': 30,
+        'max_depth': -1,  # -1 means no limit
+        'subsample': 1.0,
+        'colsample_bytree': 1.0,
+        # 'min_child_weight': 40,
+        # 'min_child_samples': 70,
+        # 'min_split_gain': 0.5,
+        'reg_alpha': 10,
+        'reg_lambda': 0,
+        'nthread': 12,
+        'verbose': 0,
+    }
+    bst = lgb.train(
+        lgb_params,
+        xgtrain,
+        valid_sets=[xgtrain],
+        valid_names=['train'],
+        num_boost_round=1000,
+        verbose_eval=100,
+        categorical_feature=[],
+    )
+
+    importance = bst.feature_importance('gain', iteration=bst.best_iteration)
+    mean = np.mean(importance)
+    feature_name = bst.feature_name()
+
+    importances = list(sorted(zip(feature_name, importance), key=lambda x: -x[1]))
+
+    selected = []
+    for f, s in importances:
+        if f not in orig.columns:
+            continue
+        if s < 0.1*mean:
+            continue
+        selected.append(f)
+        print(f, s)
+
+    print(len(selected))
+    return orig[['SK_ID_CURR']+selected]

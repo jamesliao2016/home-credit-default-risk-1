@@ -4,14 +4,23 @@ pd.set_option("display.max_columns", 1300)
 pd.set_option("display.width", 220)
 
 
-def _aggregate(df, by, agg):
+def _aggregate(df, by, fs):
     print('agg {}...'.format(by))
-    agg = df.groupby(by).agg(agg)
-    agg.columns = ['GRP_{}_{}_{}'.format('_'.join(by), a, b.upper()) for a, b in agg.columns]
+    agg = df.groupby(by).agg(fs)
+    features = ['GRP_{}_{}_{}'.format('_'.join(by), a, b.upper()) for a, b in agg.columns]
+    agg.columns = features
     df = df.set_index(by)
-    df = df[['SK_ID_CURR']]
     df = df.join(agg, on=by, how='left')
     df = df.reset_index(drop=True)
+    for c, ms in fs.items():
+        for m in ms:
+            ac = 'GRP_{}_{}_{}'.format('_'.join(by), c, m.upper())
+            dc = 'DIFF_{}'.format(ac)
+            adc = 'ABS_DIFF_{}'.format(ac)
+            df[dc] = df[c] - df[ac]
+            df[adc] = (df[c] - df[ac]).abs()
+            features += [dc, adc]
+    df = df[['SK_ID_CURR'] + features]
     reduce_memory(df)
     return df.set_index('SK_ID_CURR')
 

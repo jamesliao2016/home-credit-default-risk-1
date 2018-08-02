@@ -3,6 +3,7 @@ default:
 
 include ./feather.mk
 include ./app.mk
+include ./prev.mk
 include ./bureau.mk
 include ./pos.mk
 include ./inst.mk

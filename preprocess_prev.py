@@ -5,26 +5,28 @@ pd.set_option("display.width", 180)
 
 
 def preprocess_prev():
-    pre_df = pd.read_feather('./data/previous_application.feather')
-    pre_df = pre_df.sort_values(
-        ['SK_ID_CURR', 'SK_ID_PREV']).reset_index(drop=True)
+    df = pd.read_feather('./data/previous_application.feather')
 
     # Days 365.243 values -> nan
-    pre_df['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace=True)
-    pre_df['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace=True)
-    pre_df['DAYS_LAST_DUE_1ST_VERSION'].replace(365243, np.nan, inplace=True)
-    pre_df['DAYS_LAST_DUE'].replace(365243, np.nan, inplace=True)
-    pre_df['DAYS_TERMINATION'].replace(365243, np.nan, inplace=True)
+    df['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace=True)
+    df['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace=True)
+    df['DAYS_LAST_DUE_1ST_VERSION'].replace(365243, np.nan, inplace=True)
+    df['DAYS_LAST_DUE'].replace(365243, np.nan, inplace=True)
+    df['DAYS_TERMINATION'].replace(365243, np.nan, inplace=True)
+
+    # Add flags
+    df['FLAG_Approved'] = (df['NAME_CONTRACT_STATUS'] == 'Approved').astype('int')
+    df['FLAG_Refused'] = (df['NAME_CONTRACT_STATUS'] == 'Refused').astype('int')
+    df['FLAG_Revolving'] = (df['NAME_CONTRACT_TYPE'] == 'Revolving loans').astype('int')
 
     # Add feature: value ask / value received percentage
-    pre_df['RATIO_APP_TO_CREDIT'] =\
-        pre_df['AMT_APPLICATION'] / pre_df['AMT_CREDIT']
-    return pre_df
+    df['RATIO_APP_TO_CREDIT'] = df['AMT_APPLICATION'] / (1+df['AMT_CREDIT'])
+    return df
 
 
 def main():
-    pre_df = preprocess_prev()
-    pre_df.to_feather('./data/previous_application.preprocessed.feather')
+    df = preprocess_prev()
+    df.to_feather('./data/prev.preprocessed.feather')
 
 
 if __name__ == '__main__':

@@ -110,26 +110,7 @@ def rename_columns(g, prefix):
     g.columns = ['{}_{}'.format(prefix, c) for c in g.columns]
 
 
-def preprocess(debug):
-    train = pd.read_feather('./data/application_train.preprocessed.feather')
-    if debug:
-        train = train.sample(n=10000).reset_index(drop=True)
-    test = pd.read_feather('./data/application_test.preprocessed.feather')
-
-    df = pd.concat([train, test], sort=False)
-
-    df = merge_app(df)
-    gc.collect()
-    df = merge_bure(df)
-    gc.collect()
-    df = merge_prev(df)
-    gc.collect()
-    df = merge_inst(df)
-    gc.collect()
-    df = merge_cred(df)
-    gc.collect()
-    df = merge_pos(df)
-    gc.collect()
+def post_process(df):
     factorize(df)
 
     # fillna
@@ -157,6 +138,32 @@ def preprocess(debug):
     # TODO: mutate(na = apply(., 1, function(x) sum(is.na(x))),
     # TODO: mutate_all(funs(ifelse(is.nan(.), NA, .))) %>%
     # TODO: mutate_all(funs(ifelse(is.infinite(.), NA, .))) %>%
+
+    return df
+
+
+def preprocess(debug):
+    train = pd.read_feather('./data/application_train.preprocessed.feather')
+    if debug:
+        train = train.sample(n=10000).reset_index(drop=True)
+    test = pd.read_feather('./data/application_test.preprocessed.feather')
+
+    df = pd.concat([train, test], sort=False)
+
+    df = merge_app(df)
+    gc.collect()
+    df = merge_bure(df)
+    gc.collect()
+    df = merge_prev(df)
+    gc.collect()
+    df = merge_inst(df)
+    gc.collect()
+    df = merge_cred(df)
+    gc.collect()
+    df = merge_pos(df)
+    gc.collect()
+
+    df = post_process(df)
 
     return df
 

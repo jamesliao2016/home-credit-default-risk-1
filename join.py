@@ -40,9 +40,13 @@ def merge_app(df):
 
 
 def merge_bure(df):
-    print('merge bure...')
-    bure = pd.read_feather('./data/bureau.agg.feather')
-    df = df.merge(bure, on='SK_ID_CURR', how='left')
+    for fname in [
+        './data/bureau.agg.feather',
+        './data/bureau.stack.feather',
+    ]:
+        print('merge {}...'.format(fname))
+        bure = pd.read_feather(fname)
+        df = df.merge(bure, on='SK_ID_CURR', how='left')
     df = add_bure_features(df)
 
     return df

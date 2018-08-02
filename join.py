@@ -65,11 +65,13 @@ def merge_inst(df):
 
 
 def merge_prev(df):
-    print('merge prev...')
-    prev = pd.read_feather('./data/previous_application.agg.feather')
-    df = df.merge(prev, on='SK_ID_CURR', how='left')
-    prev = pd.read_feather('./data/previous_application.last.feather')
-    df = df.merge(prev, on='SK_ID_CURR', how='left')
+    for fname in [
+        './data/prev.agg.feather',
+        './data/prev.last.feather',
+    ]:
+        print('merge {}...'.format(fname))
+        prev = pd.read_feather(fname)
+        df = df.merge(prev, on='SK_ID_CURR', how='left')
 
     return df
 

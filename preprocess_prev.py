@@ -14,6 +14,8 @@ def preprocess_prev():
     df['DAYS_LAST_DUE'].replace(365243, np.nan, inplace=True)
     df['DAYS_TERMINATION'].replace(365243, np.nan, inplace=True)
 
+    df['NOT_COMPLETE'] = pd.notnull(df['DAYS_LAST_DUE_1ST_VERSION']).astype('i')
+
     # Add flags
     df['FLAG_Approved'] = (df['NAME_CONTRACT_STATUS'] == 'Approved').astype('int')
     df['FLAG_Refused'] = (df['NAME_CONTRACT_STATUS'] == 'Refused').astype('int')

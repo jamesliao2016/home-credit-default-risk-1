@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import lightgbm as lgb
 from datetime import datetime
-from collections import defaultdict
+from utility import save_importance
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 '''
@@ -27,7 +27,7 @@ def load(idx):
     return train, valid, test
 
 
-def train(idx, importance_summay):
+def train(idx):
     train, valid, test = load(idx)
     gc.collect()
 
@@ -87,14 +87,7 @@ def train(idx, importance_summay):
     print("bst1.best_iteration: ", bst.best_iteration)
     print("auc:", score)
 
-    importance = bst.feature_importance(iteration=bst.best_iteration)
-    feature_name = bst.feature_name()
-
-    importance = bst.feature_importance(iteration=bst.best_iteration)
-    feature_name = bst.feature_name()
-
-    for key, value in zip(feature_name, importance):
-        importance_summay[key] += value / sum(importance)
+    save_importance(bst, './data/importance.all.{}.csv'.format(idx))
 
     test['PRED'] = bst.predict(test[features], bst.best_iteration)
     return test, score
@@ -108,21 +101,16 @@ def main():
     print('debug: {}'.format(debug))
     gc.collect()
 
-    importance_summay = defaultdict(lambda: 0)
     auc_summary = []
     results = []
     for i in range(5):
-        res, score = train(i, importance_summay)
+        res, score = train(i)
         gc.collect()
         results.append(res)
         auc_summary.append(score)
         print('score: {}'.format(score))
 
     auc_summary = np.array(auc_summary)
-
-    importances = list(sorted(importance_summay.items(), key=lambda x: -x[1]))
-    for key, value in importances[:500]:
-        print('{} {}'.format(key, value))
 
     print('validate auc: {} +- {}'.format(
         auc_summary.mean(), auc_summary.std()))

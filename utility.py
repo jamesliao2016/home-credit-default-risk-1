@@ -101,6 +101,21 @@ def filter_by_corr(df):
     return df[cols]
 
 
+def save_importance(bst, fname):
+    split = bst.feature_importance('split', iteration=bst.best_iteration)
+    gain = bst.feature_importance('gain', iteration=bst.best_iteration)
+    feature_name = bst.feature_name()
+
+    df = pd.DataFrame(
+        list(zip(feature_name, split, gain)),
+        columns=['feature', 'split', 'gain'],
+    )
+    df = df.sort_values('split', ascending=False)
+
+    print('save {}...'.format(fname))
+    df.to_csv(fname, index=False)
+
+
 def reset_seed(seed=0):
     random.seed(seed)
     np.random.seed(seed)

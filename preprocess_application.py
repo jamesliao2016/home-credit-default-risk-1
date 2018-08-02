@@ -12,6 +12,27 @@ def preprocess_application():
     df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
     reduce_memory(df)
 
+    df = df.drop([
+        'FLAG_DOCUMENT_11',
+        'FLAG_DOCUMENT_21',
+        'FLAG_DOCUMENT_20',
+        'FLAG_DOCUMENT_19',
+        'FLAG_DOCUMENT_18',
+        'FLAG_DOCUMENT_17',
+        'FLAG_DOCUMENT_16',
+        'FLAG_DOCUMENT_15',
+        'FLAG_DOCUMENT_14',
+        'FLAG_DOCUMENT_13',
+        'FLAG_DOCUMENT_12',
+        'FLAG_DOCUMENT_10',
+        'FLAG_DOCUMENT_9',
+        'FLAG_DOCUMENT_7',
+        'FLAG_DOCUMENT_6',
+        'FLAG_DOCUMENT_5',
+        'FLAG_DOCUMENT_4',
+        'FLAG_DOCUMENT_2',
+    ], axis=1)
+
     df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
 
     df['DAYS_EMPLOYED_PERC'] = df['DAYS_EMPLOYED'] / df['DAYS_BIRTH']

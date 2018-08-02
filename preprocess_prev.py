@@ -7,6 +7,15 @@ pd.set_option("display.width", 180)
 def preprocess_prev():
     df = pd.read_feather('./data/previous_application.feather')
 
+    df['FLAG_PURPOSE_NA'] = (
+        (df['NAME_CASH_LOAN_PURPOSE'] == 'XNA') | (df['NAME_CASH_LOAN_PURPOSE'] == 'XAP')
+    ).astype('i')
+    df.pop('NAME_CASH_LOAN_PURPOSE')
+
+    df['FLAG_THROUGH_BANK'] = (df['NAME_PAYMENT_TYPE'] == 'Cash_through_the_bank').astype('i')
+    df['FLAG_PAYMENT_TYPE_XNA'] = (df['NAME_PAYMENT_TYPE'] == 'XNA').astype('i')
+    df.pop('NAME_PAYMENT_TYPE')
+
     # Days 365.243 values -> nan
     df['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace=True)
     df['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace=True)
@@ -23,6 +32,7 @@ def preprocess_prev():
 
     # Add feature: value ask / value received percentage
     df['RATIO_APP_TO_CREDIT'] = df['AMT_APPLICATION'] / (1+df['AMT_CREDIT'])
+
     return df
 
 

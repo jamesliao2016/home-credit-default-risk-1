@@ -45,8 +45,7 @@ def preprocess_prev():
     approved = df[df['FLAG_Approved'] == 1]
     approved_agg = approved.groupby('SK_ID_CURR').agg(a)
     approved_agg.columns = [
-        'APPROVED_{}_{}'.format(
-                a.upper(), b) for a, b in approved_agg.columns]
+        'APPROVED_{}_{}'.format(a, b.upper()) for a, b in approved_agg.columns]
 
     agg = agg.join(approved_agg, on='SK_ID_CURR', how='left')
 
@@ -54,7 +53,7 @@ def preprocess_prev():
     refused = df[df['FLAG_Refused'] == 1]
     refused_agg = refused.groupby('SK_ID_CURR').agg(a)
     refused_agg.columns = [
-        'REFUSED_{}_{}'.format(a.upper(), b) for a, b in refused_agg.columns]
+        'REFUSED_{}_{}'.format(a, b.upper()) for a, b in refused_agg.columns]
     agg = agg.join(refused_agg, on='SK_ID_CURR', how='left')
 
     agg.columns = ['PREV_{}'.format(c) for c in agg.columns]

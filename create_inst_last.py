@@ -8,6 +8,7 @@ def aggregate_inst_last():
     df = df.sort_values(['SK_ID_CURR', 'DAYS_INSTALMENT'])
 
     last = df.groupby(['SK_ID_CURR']).last()
+    last = last.drop(['SK_ID_PREV'], axis=1)
     last.columns = ['INST_LAST_{}'.format(c) for c in last.columns]
 
     return last.reset_index()

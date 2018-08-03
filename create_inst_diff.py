@@ -11,6 +11,21 @@ def main():
 
     df = df.drop(['IS_CREDIT'], axis=1)
 
+    a = {
+        'AMT_PAYMENT': ['mean', 'min', 'max', 'std'],
+        'AMT_INSTALMENT': ['mean', 'min', 'max', 'std'],
+        'DAYS_ENTRY_PAYMENT': ['mean', 'min', 'max', 'std'],
+        'NUM_INSTALMENT_VERSION': ['mean'],
+        'NUM_INSTALMENT_NUMBER': ['mean', 'min', 'max', 'std'],
+        'DBD': ['mean', 'min', 'max', 'std'],
+        'DPD': ['mean', 'min', 'max', 'std'],
+        'FLAG_DBD': ['mean'],
+        'FLAG_DPD': ['mean'],
+        'DAYS_INSTALMENT': ['mean'],
+        'RATIO_PAYMENT': ['mean'],
+        'DIFF_PAYMENT': ['mean'],
+    }
+
     grp = df.groupby(['SK_ID_CURR', 'SK_ID_PREV'])
     prev = grp.shift(-1)
     for c in prev.columns:
@@ -19,7 +34,7 @@ def main():
         df[c] -= prev[c]
 
     grp = df.groupby('SK_ID_CURR')
-    agg = grp.agg(['mean', 'sum', 'max', 'min', 'std'])
+    agg = grp.agg(a)
     agg.columns = ["{}_{}".format(a, b.upper()) for a, b in agg.columns]
     agg.columns = ["INST_DIFF_{}".format(c) for c in agg.columns]
     agg = agg.reset_index()

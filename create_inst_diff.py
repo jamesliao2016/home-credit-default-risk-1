@@ -9,6 +9,8 @@ def main():
     df, _ = one_hot_encoder(df)
     df = df.sort_values(['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_INSTALMENT'])
 
+    df = df.drop(['IS_CREDIT'], axis=1)
+
     grp = df.groupby(['SK_ID_CURR', 'SK_ID_PREV'])
     prev = grp.shift(-1)
     for c in prev.columns:

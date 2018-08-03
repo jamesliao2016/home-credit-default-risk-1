@@ -7,6 +7,8 @@ pd.set_option("display.width", 180)
 def preprocess_prev():
     df = pd.read_feather('./data/previous_application.feather')
 
+    df.pop('NAME_GOODS_CATEGORY')
+
     df['FLAG_PURPOSE_NA'] = (
         (df['NAME_CASH_LOAN_PURPOSE'] == 'XNA') | (df['NAME_CASH_LOAN_PURPOSE'] == 'XAP')
     ).astype('i')

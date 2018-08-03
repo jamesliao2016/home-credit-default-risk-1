@@ -86,6 +86,7 @@ def merge_cred(df):
         './data/credit.last.feather',
         './data/credit.prev.last.feather',
         './data/credit.diff.feather',
+        './data/credit.stack.feather',
     ]:
         print('merge {}...'.format(fname))
         cred = pd.read_feather(fname)

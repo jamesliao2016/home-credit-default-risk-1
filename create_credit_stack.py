@@ -18,6 +18,7 @@ def load(idx):
         './data/credit.last.feather',
         './data/credit.prev.last.feather',
         './data/credit.diff.feather',
+        './data/credit.tail.feather',
     ]:
         cred.append(pd.read_feather(fname).set_index('SK_ID_CURR'))
     cred = pd.concat(cred, axis=1)

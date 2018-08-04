@@ -12,3 +12,6 @@ data/credit.prev.last.feather: data/credit.preprocessed.feather create_credit_pr
 
 data/credit.diff.feather: data/credit.preprocessed.feather create_credit_diff.py
 	python create_credit_diff.py
+
+data/credit.tail.feather: data/credit.preprocessed.feather create_credit_tail.py
+	python create_credit_tail.py

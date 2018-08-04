@@ -6,6 +6,7 @@ pd.set_option("display.max_columns", 100)
 def _create():
     df = pd.read_feather('./data/prev.preprocessed.feather')
     df, cat_columns = one_hot_encoder(df)
+    df.columns = [c.replace(' ', '_') for c in df.columns]
 
     fs = ['sum', 'median', 'mean', 'std', 'max', 'min']
     a = {
@@ -20,19 +21,21 @@ def _create():
         'RATE_DOWN_PAYMENT': fs,
         'DAYS_DECISION': fs,
         'CNT_PAYMENT': fs,
+        'NAME_CLIENT_TYPE_New': ['mean'],
+        'NAME_YIELD_GROUP_middle': ['mean'],
+        'NAME_YIELD_GROUP_low_action': ['mean'],
+        'NAME_TYPE_SUITE_Unaccompanied': ['mean'],
+        'NAME_TYPE_SUITE_nan': ['mean'],
+        'PRODUCT_COMBINATION_Cash_X-Sell:_low': ['mean'],
+        'PRODUCT_COMBINATION_POS_industry_with_interest': ['mean'],
+        'PRODUCT_COMBINATION_POS_household_with_interest': ['mean'],
+        'PRODUCT_COMBINATION_POS_mobile_with_interest': ['mean'],
+        'NAME_SELLER_INDUSTRY_Connectivity': ['mean'],
+        'NAME_SELLER_INDUSTRY_Consumer_electronics': ['mean'],
+        'NAME_SELLER_INDUSTRY_Furniture': ['mean'],
         # added
-        'FLAG_Refused': ['mean'],
         'NOT_COMPLETE': ['mean'],
     }
-    for c in cat_columns:
-        a[c] = ['mean']
-
-    for c in df.columns:
-        if c == 'SK_ID_CURR' or c == 'SK_ID_PREV':
-            continue
-        if c in a:
-            continue
-        a[c] = ['mean']
 
     df = df[df['FLAG_Approved'] == 1]
     g = df.groupby('SK_ID_CURR').agg(a)

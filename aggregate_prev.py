@@ -49,15 +49,6 @@ def preprocess_prev():
 
     agg = agg.join(approved_agg, on='SK_ID_CURR', how='left')
 
-    # Previous Applications: Refused Applications
-    refused = df[df['FLAG_Refused'] == 1]
-    refused_agg = refused.groupby('SK_ID_CURR').agg(a)
-    refused_agg.columns = [
-        'REFUSED_{}_{}'.format(a, b.upper()) for a, b in refused_agg.columns]
-    agg = agg.join(refused_agg, on='SK_ID_CURR', how='left')
-
-    agg.columns = ['PREV_{}'.format(c) for c in agg.columns]
-
     return agg.reset_index()
 
 

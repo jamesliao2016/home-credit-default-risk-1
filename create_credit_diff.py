@@ -29,12 +29,10 @@ def main():
         'AMT_TOTAL_RECEIVABLE': ['mean', 'sum'],
         'CNT_INSTALMENT_MATURE_CUM': ['mean', 'sum'],
         'SK_DPD': ['mean', 'sum'],
-        'SK_DPD_DEF': ['mean', 'sum'],
         # added
         'FAIL_PAY_TO_TOTAL': ['mean'],
         'FAIL_PAY_TO_PRINCIPAL': ['mean'],
         'DIFF_PAYMENT_TOTAL_AND_PLAIN': ['mean', 'sum'],
-        'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': ['mean', 'sum'],
         'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': ['mean', 'sum'],
     })
     agg.columns = [a + "_" + b.upper() for a, b in agg.columns]

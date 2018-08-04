@@ -36,7 +36,7 @@ def _aggregate():
         'FAIL_PAY_TO_PRINCIPAL': fs,
         'FAIL_PAY_TO_TOTAL': fs,
         'DIFF_PAYMENT_TOTAL_AND_PLAIN': fs,
-        'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': fs,
+        'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': ['mean'],
         'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': fs,
     }
     g = grp.agg(a)

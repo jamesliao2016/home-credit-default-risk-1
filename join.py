@@ -42,7 +42,6 @@ def merge_app(df):
 def merge_bure(df):
     for fname in [
         './data/bureau.agg.feather',
-        './data/bureau.stack.feather',
     ]:
         print('merge {}...'.format(fname))
         bure = pd.read_feather(fname)
@@ -59,7 +58,6 @@ def merge_inst(df):
         './data/inst.tail.feather',
         './data/inst.diff.feather',
         './data/inst.trend.feather',
-        './data/inst.stack.feather',
     ]:
         inst = pd.read_feather(fname)
         df = df.merge(inst, on='SK_ID_CURR', how='left')
@@ -88,7 +86,7 @@ def merge_cred(df):
         './data/credit.last.feather',
         './data/credit.prev.last.feather',
         './data/credit.diff.feather',
-        './data/credit.stack.feather',
+        './data/credit.tail.feather',
     ]:
         print('merge {}...'.format(fname))
         cred = pd.read_feather(fname)
@@ -97,7 +95,6 @@ def merge_cred(df):
 
 
 def merge_pos(df):
-    print('merge pos...')
     for fname in [
         './data/pos.agg.feather',
         './data/pos.diff.feather',

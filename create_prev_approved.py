@@ -3,11 +3,10 @@ from utility import one_hot_encoder, reduce_memory
 pd.set_option("display.max_columns", 100)
 
 
-def preprocess_prev():
+def _create():
     df = pd.read_feather('./data/prev.preprocessed.feather')
     df, cat_columns = one_hot_encoder(df)
 
-    # Previous applications numeric features
     fs = ['sum', 'median', 'mean', 'std', 'max', 'min']
     a = {
         'SK_ID_PREV': ['nunique'],
@@ -35,19 +34,17 @@ def preprocess_prev():
             continue
         a[c] = ['mean']
 
-    grp = df.groupby('SK_ID_CURR')
-    g = grp.agg(a)
-    g.columns = [a + "_" + b.upper() for a, b in g.columns]
-    g['COUNT'] = grp.size()
-    g.columns = ['PREV_AGG_{}'.format(c) for c in g.columns]
+    df = df[df['FLAG_Approved'] == 1]
+    g = df.groupby('SK_ID_CURR').agg(a)
+    g.columns = ['PREV_APPROVED_{}_{}'.format(a, b.upper()) for a, b in g.columns]
 
     return g.reset_index()
 
 
 def main():
-    agg = preprocess_prev()
+    agg = _create()
     reduce_memory(agg)
-    agg.to_feather('./data/prev.agg.feather')
+    agg.to_feather('./data/prev.approved.feather')
 
 
 if __name__ == '__main__':

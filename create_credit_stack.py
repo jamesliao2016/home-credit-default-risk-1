@@ -2,8 +2,7 @@ import gc
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
-from collections import defaultdict
-from utility import factorize
+from utility import factorize, save_importance
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 '''
@@ -55,7 +54,7 @@ def load(idx):
     return train, valid, test
 
 
-def train(idx, importance_summay):
+def train(idx):
     train, valid, test = load(idx)
     gc.collect()
 
@@ -113,14 +112,7 @@ def train(idx, importance_summay):
     print("bst1.best_iteration: ", bst.best_iteration)
     print("auc:", score)
 
-    importance = bst.feature_importance(iteration=bst.best_iteration)
-    feature_name = bst.feature_name()
-
-    importance = bst.feature_importance(iteration=bst.best_iteration)
-    feature_name = bst.feature_name()
-
-    for key, value in zip(feature_name, importance):
-        importance_summay[key] += value / sum(importance)
+    save_importance(bst, './data/credit.importance.{}.csv'.format(idx))
 
     valid['PRED'] = bst.predict(valid[features], bst.best_iteration)
     test['PRED'] = bst.predict(test[features], bst.best_iteration)
@@ -130,12 +122,11 @@ def train(idx, importance_summay):
 def main():
     np.random.seed(215)
 
-    importance_summay = defaultdict(lambda: 0)
     auc_summary = []
     results = []
     stack = []
     for i in range(5):
-        res, valid, score = train(i, importance_summay)
+        res, valid, score = train(i)
         stack.append(valid[['SK_ID_CURR', 'PRED']])
         gc.collect()
         results.append(res)
@@ -143,11 +134,6 @@ def main():
         print('score: {}'.format(score))
 
     auc_summary = np.array(auc_summary)
-
-    importances = list(sorted(importance_summay.items(), key=lambda x: -x[1]))
-    for key, value in importances[:500]:
-        print('{} {}'.format(key, value))
-
     print('validate auc: {} +- {}'.format(
         auc_summary.mean(), auc_summary.std()))
 

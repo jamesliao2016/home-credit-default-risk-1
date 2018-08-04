@@ -71,6 +71,8 @@ def merge_inst(df):
 def merge_prev(df):
     for fname in [
         './data/prev.agg.feather',
+        './data/prev.refused.feather',
+        './data/prev.approved.feather',
         './data/prev.last.feather',
     ]:
         print('merge {}...'.format(fname))

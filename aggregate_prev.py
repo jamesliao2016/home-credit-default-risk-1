@@ -39,7 +39,7 @@ def preprocess_prev():
     g = grp.agg(a)
     g.columns = [a + "_" + b.upper() for a, b in g.columns]
     g['COUNT'] = grp.size()
-    g.columns = ['PREV_AGG_{}'.format(c) for c in g.columns]
+    g.columns = ['PREV_{}'.format(c) for c in g.columns]
 
     return g.reset_index()
 

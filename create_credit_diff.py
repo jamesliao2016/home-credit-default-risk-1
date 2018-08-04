@@ -38,7 +38,7 @@ def main():
         'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': ['mean', 'sum'],
     })
     agg.columns = [a + "_" + b.upper() for a, b in agg.columns]
-    agg.columns = ["CRED_DIFF" + c for c in agg.columns]
+    agg.columns = ["CRED_DIFF_{}".format(c) for c in agg.columns]
     agg = agg.reset_index()
 
     agg.to_feather('./data/credit.diff.feather')

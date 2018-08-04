@@ -34,6 +34,7 @@ def aggregate_credit_last():
         'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': ['mean', 'sum'],
         'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': ['mean', 'sum'],
     })
+    g.columns = ['{}_{}'.format(a, b.upper()) for a, b in g.columns]
     g['COUNT'] = grp.size()
     agg = g
 

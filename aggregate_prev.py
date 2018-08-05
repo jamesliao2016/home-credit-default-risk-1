@@ -25,15 +25,6 @@ def preprocess_prev():
         'FLAG_Refused': ['mean'],
         'NOT_COMPLETE': ['mean'],
     }
-    for c in cat_columns:
-        a[c] = ['mean']
-
-    for c in df.columns:
-        if c == 'SK_ID_CURR' or c == 'SK_ID_PREV':
-            continue
-        if c in a:
-            continue
-        a[c] = ['mean']
 
     grp = df.groupby('SK_ID_CURR')
     g = grp.agg(a)

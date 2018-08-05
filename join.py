@@ -74,6 +74,7 @@ def merge_prev(df):
         './data/prev.refused.feather',
         './data/prev.approved.feather',
         './data/prev.last.feather',
+        './data/prev.grp.feather',
     ]:
         print('merge {}...'.format(fname))
         prev = pd.read_feather(fname)

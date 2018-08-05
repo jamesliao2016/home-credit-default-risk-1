@@ -7,8 +7,8 @@ pd.set_option("display.width", 220)
 def _aggregate(df, by, fs):
     print('agg {}...'.format(by))
     agg = df.groupby(by).agg(fs)
-    features = ['GRP_{}_{}_{}'.format('_'.join(by), a, b.upper()) for a, b in agg.columns]
-    agg.columns = features
+    agg.columns = ['GRP_{}_{}_{}'.format('_'.join(by), a, b.upper()) for a, b in agg.columns]
+    features = []
     df = df.set_index(by)
     df = df.join(agg, on=by, how='left')
     df = df.reset_index(drop=True)

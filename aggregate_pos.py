@@ -10,12 +10,13 @@ def _aggregate():
         # original
         'CNT_INSTALMENT': fs,
         'CNT_INSTALMENT_FUTURE': fs,
-        'SK_DPD': fs,
-        'SK_DPD_DEF': fs,
+        'SK_DPD': ['mean', 'std'],
+        'SK_DPD_DEF': ['mean', 'std'],
         # preprocessed
         'RATIO_CNT_INST': ['max', 'min'],
         'FLAG_LATE': ['sum', 'mean'],
         'FLAG_LATE_DEF': ['sum', 'mean'],
+        'FLAG_COMPLETED': ['sum', 'mean'],
     }
     g = grp.agg(agg)
     g.columns = ['{}_{}'.format(a, b.upper()) for a, b in g.columns]

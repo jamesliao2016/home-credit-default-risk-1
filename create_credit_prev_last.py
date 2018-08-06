@@ -18,24 +18,18 @@ def aggregate_credit_last():
         'AMT_DRAWINGS_CURRENT': ['mean', 'sum'],
         'AMT_DRAWINGS_ATM_CURRENT': ['mean', 'sum'],
         'AMT_DRAWINGS_POS_CURRENT': ['mean', 'sum'],
-        'AMT_DRAWINGS_OTHER_CURRENT': ['mean', 'sum'],
         'AMT_CREDIT_LIMIT_ACTUAL': ['mean', 'sum'],
         'AMT_INST_MIN_REGULARITY': ['mean', 'sum'],
         'AMT_PAYMENT_TOTAL_CURRENT': ['mean', 'sum'],
         'AMT_RECEIVABLE_PRINCIPAL': ['mean', 'sum'],
         'AMT_TOTAL_RECEIVABLE': ['mean', 'sum'],
         'CNT_INSTALMENT_MATURE_CUM': ['mean', 'sum'],
-        'SK_DPD': ['mean', 'sum'],
-        'SK_DPD_DEF': ['mean', 'sum'],
         # added
-        'FAIL_PAY_TO_TOTAL': ['mean'],
-        'FAIL_PAY_TO_PRINCIPAL': ['mean'],
-        'DIFF_PAYMENT_TOTAL_AND_PLAIN': ['mean', 'sum'],
-        'DIFF_RECEIVABLE_TOTAL_AND_PLAIN': ['mean', 'sum'],
-        'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': ['mean', 'sum'],
+        'DIFF_PAYMENT_TOTAL_AND_PLAIN': ['sum'],
+        'DIFF_RECEIVABLE_TOTAL_AND_PRINCIPAL': ['sum'],
     })
+
     g.columns = ['{}_{}'.format(a, b.upper()) for a, b in g.columns]
-    g['COUNT'] = grp.size()
     agg = g
 
     agg.columns = ['CRED_PREV_LAST_{}'.format(c) for c in agg.columns]

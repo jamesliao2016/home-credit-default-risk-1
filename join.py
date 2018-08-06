@@ -104,6 +104,7 @@ def merge_pos(df):
         './data/pos.tail.feather',
         './data/pos.trend.feather',
         './data/pos.last.feather',
+        './data/pos.grp.feather',
     ]:
         gc.collect()
         print('merge {}...'.format(fname))

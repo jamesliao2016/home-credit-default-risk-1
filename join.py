@@ -142,9 +142,10 @@ def post_process(df):
     df['DIFF_ANNUITY_AND_INCOME_SUM'] =\
         df['AMT_INCOME_TOTAL'] - df['ANNUITY_SUM']
 
-    # TODO: mutate(na = apply(., 1, function(x) sum(is.na(x))),
+    df['COUNT_NAN'] = df.isnull().sum(axis=1)
+    with pd.option_context('mode.use_inf_as_na', True):
+        df['COUNT_INF'] = df.isnull().sum(axis=1) - df['COUNT_NAN']
     # TODO: mutate_all(funs(ifelse(is.nan(.), NA, .))) %>%
-    # TODO: mutate_all(funs(ifelse(is.infinite(.), NA, .))) %>%
 
     return df
 

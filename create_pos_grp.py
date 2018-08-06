@@ -29,7 +29,7 @@ def main():
     res = []
 
     fs = {
-        'CNT_INSTALMENT_FUTURE': ['mean', 'sum', 'max', 'min', 'std'],
+        'CNT_INSTALMENT_FUTURE': ['mean', 'max', 'min', 'std'],
     }
 
     for by in [

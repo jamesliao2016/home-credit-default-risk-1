@@ -2,9 +2,8 @@ import gc
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
-from collections import defaultdict
 from join import add_bure_features
-from utility import factorize
+from utility import factorize, save_importance
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 '''
@@ -15,17 +14,18 @@ This script is based on https://www.kaggle.com/kailex/tidy-xgb-all-tables-0-789
 def load(idx):
     print('merge...')
     bure = pd.read_feather('./data/bureau.agg.feather')
+    for fname in [
+        './data/bureau.grp.feather',
+        './data/app.agg.feather'
+    ]:
+        bure = bure.merge(pd.read_feather(fname), on='SK_ID_CURR')
     bure = add_bure_features(bure)
-    app = pd.read_feather('./data/app.agg.feather')
     test = pd.read_feather('./data/application_test.preprocessed.feather')
     test = test.merge(bure, on='SK_ID_CURR')
-    test = test.merge(app, on='SK_ID_CURR')
     test['TARGET'] = np.nan
     train = pd.read_feather('./data/application_train.preprocessed.feather')
     train = train.merge(bure, on='SK_ID_CURR')
-    train = train.merge(app, on='SK_ID_CURR')
     del bure
-    del app
 
     gc.collect()
 
@@ -51,7 +51,7 @@ def load(idx):
     return train, valid, test
 
 
-def train(idx, importance_summay):
+def train(idx):
     train, valid, test = load(idx)
     gc.collect()
 
@@ -109,14 +109,7 @@ def train(idx, importance_summay):
     print("bst1.best_iteration: ", bst.best_iteration)
     print("auc:", score)
 
-    importance = bst.feature_importance(iteration=bst.best_iteration)
-    feature_name = bst.feature_name()
-
-    importance = bst.feature_importance(iteration=bst.best_iteration)
-    feature_name = bst.feature_name()
-
-    for key, value in zip(feature_name, importance):
-        importance_summay[key] += value / sum(importance)
+    save_importance(bst, './data/bureau.importance.{}.csv'.format(idx))
 
     valid['PRED'] = bst.predict(valid[features], bst.best_iteration)
     test['PRED'] = bst.predict(test[features], bst.best_iteration)
@@ -126,12 +119,11 @@ def train(idx, importance_summay):
 def main():
     np.random.seed(215)
 
-    importance_summay = defaultdict(lambda: 0)
     auc_summary = []
     results = []
     stack = []
     for i in range(5):
-        res, valid, score = train(i, importance_summay)
+        res, valid, score = train(i)
         stack.append(valid[['SK_ID_CURR', 'PRED']])
         gc.collect()
         results.append(res)
@@ -139,10 +131,6 @@ def main():
         print('score: {}'.format(score))
 
     auc_summary = np.array(auc_summary)
-
-    importances = list(sorted(importance_summay.items(), key=lambda x: -x[1]))
-    for key, value in importances[:500]:
-        print('{} {}'.format(key, value))
 
     print('validate auc: {} +- {}'.format(
         auc_summary.mean(), auc_summary.std()))

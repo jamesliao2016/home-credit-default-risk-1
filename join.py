@@ -32,9 +32,13 @@ def add_inst_features(df):
 
 
 def merge_app(df):
-    print('merge app...')
-    app = pd.read_feather('./data/app.agg.feather')
-    df = df.merge(app, on='SK_ID_CURR', how='left')
+    for fname in [
+        './data/app.agg.feather',
+        './data/app.grp.diff.feather',
+    ]:
+        print('merge {}...'.format(fname))
+        app = pd.read_feather(fname)
+        df = df.merge(app, on='SK_ID_CURR', how='left')
 
     return df
 

@@ -15,9 +15,9 @@ def _aggregate(df, by, fs):
     for c, ms in fs.items():
         for m in ms:
             ac = '{}_{}'.format(c, m.upper())
-            adc = 'APP_GRP_{}_ABS_DIFF_{}'.format('_'.join(by), ac)
-            df[adc] = (df[c] - df[ac]).abs()
-            features.append(adc)
+            dc = 'APP_GRP_{}_DIFF_{}'.format('_'.join(by), ac)
+            df[dc] = df[c] - df[ac]
+            features.append(dc)
     df = df[['SK_ID_CURR'] + features]
     reduce_memory(df)
     return df.set_index('SK_ID_CURR')
@@ -31,29 +31,57 @@ def aggregate_app():
 
     res = []
     fs = ['min', 'mean', 'max', 'sum', 'var']
-    for by in [
-        ['NAME_EDUCATION_TYPE', 'CODE_GENDER'],
-        ['NAME_FAMILY_STATUS', 'NAME_EDUCATION_TYPE'],
-        ['NAME_FAMILY_STATUS', 'CODE_GENDER']
-    ]:
-        res.append(_aggregate(df, by, {
-            'AMT_CREDIT': fs,
-            'AMT_ANNUITY': fs,
-            'AMT_INCOME_TOTAL': fs,
-            'AMT_GOODS_PRICE': fs,
-            'EXT_SOURCE_1': fs,
-            'EXT_SOURCE_2': fs,
-            'EXT_SOURCE_3': fs,
-            'OWN_CAR_AGE': fs,
-            'REGION_POPULATION_RELATIVE': fs,
-            'DAYS_REGISTRATION': fs,
-            'CNT_CHILDREN': fs,
-            'CNT_FAM_MEMBERS': fs,
-            'DAYS_ID_PUBLISH': fs,
-            'DAYS_BIRTH': fs,
-            'DAYS_EMPLOYED': fs,
-        }))
-
+    res.append(_aggregate(df, ['NAME_FAMILY_STATUS', 'NAME_EDUCATION_TYPE'], {
+        'AMT_CREDIT': fs,
+        'AMT_ANNUITY': fs,
+        'AMT_INCOME_TOTAL': fs,
+        'AMT_GOODS_PRICE': fs,
+        'EXT_SOURCE_1': fs,
+        'EXT_SOURCE_2': fs,
+        'EXT_SOURCE_3': fs,
+        'OWN_CAR_AGE': fs,
+        'REGION_POPULATION_RELATIVE': fs,
+        'DAYS_REGISTRATION': fs,
+        'CNT_CHILDREN': ['sum', 'max'],
+        'CNT_FAM_MEMBERS': ['mean'],
+        'DAYS_ID_PUBLISH': fs,
+        'DAYS_BIRTH': fs,
+        'DAYS_EMPLOYED': fs,
+    }))
+    res.append(_aggregate(df, ['NAME_EDUCATION_TYPE', 'CODE_GENDER'], {
+        'AMT_CREDIT': fs,
+        'AMT_ANNUITY': fs,
+        'AMT_INCOME_TOTAL': fs,
+        'AMT_GOODS_PRICE': fs,
+        'EXT_SOURCE_1': fs,
+        'EXT_SOURCE_2': fs,
+        'EXT_SOURCE_3': fs,
+        'OWN_CAR_AGE': fs,
+        'REGION_POPULATION_RELATIVE': fs,
+        'DAYS_REGISTRATION': fs,
+        'CNT_CHILDREN': ['max'],
+        'CNT_FAM_MEMBERS': ['mean'],
+        'DAYS_ID_PUBLISH': fs,
+        'DAYS_BIRTH': fs,
+        'DAYS_EMPLOYED': fs,
+    }))
+    res.append(_aggregate(df, ['NAME_FAMILY_STATUS', 'CODE_GENDER'], {
+        'AMT_CREDIT': fs,
+        'AMT_ANNUITY': fs,
+        'AMT_INCOME_TOTAL': fs,
+        'AMT_GOODS_PRICE': fs,
+        'EXT_SOURCE_1': ['min', 'mean', 'max', 'var'],
+        'EXT_SOURCE_2': ['min', 'mean', 'max', 'var'],
+        'EXT_SOURCE_3': fs,
+        'OWN_CAR_AGE': fs,
+        'REGION_POPULATION_RELATIVE': fs,
+        'DAYS_REGISTRATION': fs,
+        'CNT_CHILDREN': ['sum'],
+        'CNT_FAM_MEMBERS': ['mean', 'sum', 'max'],
+        'DAYS_ID_PUBLISH': fs,
+        'DAYS_BIRTH': fs,
+        'DAYS_EMPLOYED': fs,
+    }))
     res.append(_aggregate(df, ['CODE_GENDER', 'ORGANIZATION_TYPE'], {
         'AMT_ANNUITY': ['mean'],
         'AMT_INCOME_TOTAL': ['mean'],
@@ -110,7 +138,7 @@ def aggregate_app():
 def main():
     agg = aggregate_app()
     print(agg.columns, agg.columns.shape)
-    agg.to_feather('./data/app.agg.feather')
+    agg.to_feather('./data/app.grp.diff.feather')
 
 
 if __name__ == '__main__':

@@ -44,16 +44,6 @@ def aggregate_bureau():
 
     f['RATIO_OVERDUE_PER_DEBT'] = f['AMT_CREDIT_SUM_OVERDUE_SUM'] / f['AMT_CREDIT_SUM_DEBT_SUM']
 
-    # Bureau: Active credits
-    act = df[df['FLAG_ACTIVE'] == 1]
-    g = act.groupby('SK_ID_CURR').agg({
-        'DAYS_CREDIT': ['mean', 'std', 'sum', 'min', 'max'],
-        'AMT_CREDIT_SUM': ['mean', 'std', 'sum', 'min', 'max'],
-    })
-    g.columns = [x + "_" + y.upper() for x, y in g.columns]
-    g.columns = ['ACT_{}'.format(c) for c in g.columns]
-    f = f.join(g, on='SK_ID_CURR', how='left')
-
     # # # Bureau: Closed credits
     # clo = df[df['FLAG_ACTIVE'] == 0]
     # g = clo.groupby('SK_ID_CURR').agg(agg)

@@ -16,6 +16,7 @@ def load(idx):
     bure = pd.read_feather('./data/bureau.agg.feather')
     for fname in [
         './data/bureau.active.feather',
+        './data/bureau.closed.feather',
         './data/bureau.grp.feather',
         './data/app.agg.feather'
     ]:

@@ -88,6 +88,7 @@ def train(idx):
     print("auc:", score)
 
     save_importance(bst, './data/importance.all.{}.csv'.format(idx))
+    bst.save_model('./data/lgb.model.{}.txt'.format(idx))
 
     test['PRED'] = bst.predict(test[features], bst.best_iteration)
     return test, score

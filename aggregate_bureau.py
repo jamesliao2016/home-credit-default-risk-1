@@ -25,8 +25,8 @@ def aggregate_bureau():
         'FLAG_ACTIVE': ['mean'],
         'FLAG_ONGOING': ['mean'],
         # bb
-        "BB_DPD_MEAN": ['mean', 'std', 'sum', 'min', 'max'],
-        "BB_STATUS_NUNIQUE": ['std', 'sum', 'min', 'max'],
+        "BB_DPD_MEAN": ['mean', 'std', 'sum', 'max'],
+        "BB_STATUS_NUNIQUE": ['std', 'sum', 'min'],
     }
 
     g = grp.agg(agg)

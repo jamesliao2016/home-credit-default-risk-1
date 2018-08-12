@@ -11,16 +11,13 @@ def aggregate_bureau():
     agg = {
         # cat
         'CREDIT_TYPE': ['nunique'],
-        'CREDIT_ACTIVE': ['nunique'],
         # num
         'AMT_ANNUITY': ['mean', 'std', 'sum', 'min', 'max'],
         'AMT_CREDIT_SUM': ['mean', 'std', 'sum', 'min', 'max'],
         'AMT_CREDIT_SUM_DEBT': ['mean', 'std', 'sum', 'min', 'max'],
         'AMT_CREDIT_SUM_LIMIT': ['mean', 'std', 'sum', 'min', 'max'],
-        'AMT_CREDIT_SUM_OVERDUE': ['mean', 'std', 'sum', 'min', 'max'],
+        'AMT_CREDIT_SUM_OVERDUE': ['mean', 'std', 'sum', 'max'],
         'AMT_CREDIT_MAX_OVERDUE': ['mean', 'std', 'sum', 'min', 'max'],
-        'CNT_CREDIT_PROLONG': ['mean', 'std', 'sum', 'min', 'max'],
-        'CREDIT_DAY_OVERDUE': ['mean', 'std', 'sum', 'min', 'max'],
         'DAYS_CREDIT': ['mean', 'std', 'sum', 'min', 'max'],
         'DAYS_CREDIT_ENDDATE': ['mean', 'std', 'sum', 'min', 'max'],
         'DAYS_CREDIT_UPDATE': ['mean', 'std', 'sum', 'min', 'max'],
@@ -29,7 +26,7 @@ def aggregate_bureau():
         'FLAG_ONGOING': ['mean'],
         # bb
         "BB_DPD_MEAN": ['mean', 'std', 'sum', 'min', 'max'],
-        "BB_STATUS_NUNIQUE": ['mean', 'std', 'sum', 'min', 'max'],
+        "BB_STATUS_NUNIQUE": ['std', 'sum', 'min', 'max'],
     }
 
     g = grp.agg(agg)

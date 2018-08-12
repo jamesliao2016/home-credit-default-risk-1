@@ -12,19 +12,19 @@ def _app():
 def _create(by, fs):
     print('create {}...'.format(by))
     df = pd.read_feather('./data/bureau.preprocessed.feather')
-    app = _app()
-    df = df.merge(app, on='SK_ID_CURR', how='left')
+    # app = _app()
+    # df = df.merge(app, on='SK_ID_CURR', how='left')
     agg = df.groupby(by).agg(fs)
-    agg.columns = ['GRP_{}_{}_{}'.format('_'.join(by), a, b.upper()) for a, b in agg.columns]
+    agg.columns = ['{}_{}'.format(a, b.upper()) for a, b in agg.columns]
     features = []
     df = df.set_index(by)
     df = df.join(agg, on=by, how='left')
     df = df.reset_index(drop=True)
     for c, ms in fs.items():
         for m in ms:
-            ac = 'GRP_{}_{}_{}'.format('_'.join(by), c, m.upper())
-            dc = 'DIFF_{}'.format(ac)
-            adc = 'ABS_DIFF_{}'.format(ac)
+            ac = '{}_{}'.format(c, m.upper())
+            dc = 'GRP_DIFF_{}_{}'.format('_'.join(by), ac)
+            adc = 'GRP_ABS_DIFF_{}_{}'.format('_'.join(by), ac)
             df[dc] = df[c] - df[ac]
             df[adc] = (df[c] - df[ac]).abs()
             features += [dc, adc]
@@ -41,8 +41,17 @@ def main():
         # 'EXT_SOURCE_1': ['mean'],
         # 'EXT_SOURCE_2': ['mean'],
         # 'EXT_SOURCE_3': ['mean'],
-        'EXT_SOURCES_MEAN': ['mean'],
-        'ANNUITY_LENGTH': ['mean'],
+        # 'EXT_SOURCES_MEAN': ['mean'],
+        # 'ANNUITY_LENGTH': ['mean'],
+        'AMT_ANNUITY': ['mean'],
+        'AMT_CREDIT_SUM': ['mean'],
+        'AMT_CREDIT_SUM_DEBT': ['mean'],
+        'AMT_CREDIT_SUM_LIMIT': ['mean'],
+        'AMT_CREDIT_SUM_OVERDUE': ['mean'],
+        'AMT_CREDIT_MAX_OVERDUE': ['mean'],
+        'DAYS_CREDIT': ['mean'],
+        'DAYS_CREDIT_ENDDATE': ['mean'],
+        'DAYS_CREDIT_UPDATE': ['mean'],
     }
 
     for by in [

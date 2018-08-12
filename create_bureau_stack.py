@@ -15,6 +15,7 @@ def load(idx):
     print('merge...')
     bure = pd.read_feather('./data/bureau.agg.feather')
     for fname in [
+        './data/bureau.active.feather',
         './data/bureau.grp.feather',
         './data/app.agg.feather'
     ]:

@@ -46,6 +46,8 @@ def merge_app(df):
 def merge_bure(df):
     for fname in [
         './data/bureau.agg.feather',
+        './data/bureau.grp.feather',
+        './data/bureau.active.feather',
     ]:
         print('merge {}...'.format(fname))
         bure = pd.read_feather(fname)

@@ -31,13 +31,6 @@ def preprocess_application():
         'FLAG_DOCUMENT_5',
         'FLAG_DOCUMENT_4',
         'FLAG_DOCUMENT_2',
-        'AMT_REQ_CREDIT_BUREAU_DAY',
-        'FONDKAPREMONT_MODE',
-        'NAME_TYPE_SUITE',
-        'REG_REGION_NOT_WORK_REGION',
-        'NONLIVINGAPARTMENTS_MODE',
-        'HOUSETYPE_MODE',
-        'NAME_HOUSING_TYPE',
     ], axis=1)
 
     df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)

@@ -24,6 +24,8 @@ def preprocess_prev():
         # added
         'FLAG_Refused': ['mean'],
         'NOT_COMPLETE': ['mean'],
+        'FLAG_X_SELL_1': ['mean'],
+        'FLAG_X_SELL_2': ['mean'],
     }
 
     grp = df.groupby('SK_ID_CURR')

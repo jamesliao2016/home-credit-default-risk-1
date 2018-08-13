@@ -4,6 +4,14 @@ pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
 
 
+def has_x_sell(d):
+    if pd.isnull(d):
+        return 0
+    if d.lower().find('x-sell') >= 0:
+        return 1
+    return 0
+
+
 def preprocess_prev():
     df = pd.read_feather('./data/previous_application.feather')
 
@@ -34,6 +42,10 @@ def preprocess_prev():
 
     # Add feature: value ask / value received percentage
     df['RATIO_APP_TO_CREDIT'] = df['AMT_APPLICATION'] / (1+df['AMT_CREDIT'])
+
+    # x-sell(discussion/63032)
+    df['FLAG_X_SELL_1'] = df['NAME_PRODUCT_TYPE'].apply(has_x_sell)
+    df['FLAG_X_SELL_2'] = df['PRODUCT_COMBINATION'].apply(has_x_sell)
 
     return df
 

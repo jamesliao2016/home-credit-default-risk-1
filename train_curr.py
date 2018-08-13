@@ -1,5 +1,6 @@
 import os
 import gc
+import pickle
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -7,9 +8,7 @@ from datetime import datetime
 from utility import save_importance
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.width", 180)
-'''
-This script is based on https://www.kaggle.com/kailex/tidy-xgb-all-tables-0-789
-'''
+now = datetime.now().strftime('%m%d-%H%M')
 
 
 def load(idx):
@@ -18,6 +17,11 @@ def load(idx):
     fold = pd.read_feather(fold)
     print('load features...')
     df = pd.read_feather('./data/features.feather')
+    print(df.shape)
+    print('filter...')
+    with open('./data/filter.0813-2134.pkl', 'rb') as fp:
+        filt = pickle.load(fp)
+        df = df.drop(filt, axis=1)
     print(df.shape)
     print('split...')
     test = df[pd.isnull(df['TARGET'])].reset_index(drop=True)
@@ -88,7 +92,7 @@ def train(idx):
     print("auc:", score)
 
     save_importance(bst, './data/importance.all.{}.csv'.format(idx))
-    bst.save_model('./data/lgb.model.{}.txt'.format(idx))
+    bst.save_model('./data/lgb.model.{}.{}.txt'.format(now, idx))
 
     test['PRED'] = bst.predict(test[features], bst.best_iteration)
     return test, score
@@ -96,7 +100,6 @@ def train(idx):
 
 def main():
     np.random.seed(215)
-    now = datetime.now().strftime('%m%d-%H%M')
 
     debug = False
     print('debug: {}'.format(debug))

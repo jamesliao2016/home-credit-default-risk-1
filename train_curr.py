@@ -19,9 +19,13 @@ def load(idx):
     df = pd.read_feather('./data/features.feather')
     print(df.shape)
     print('filter...')
-    with open('./data/filter.0813-2134.pkl', 'rb') as fp:
-        filt = pickle.load(fp)
-        df = df.drop(filt, axis=1)
+    for fname in [
+        './data/filter.0813-2134.pkl',
+        './data/filter.0814-0834.pkl',
+    ]:
+        with open(fname, 'rb') as fp:
+            filt = pickle.load(fp)
+            df = df.drop(filt, axis=1)
     print(df.shape)
     print('split...')
     test = df[pd.isnull(df['TARGET'])].reset_index(drop=True)

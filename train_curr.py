@@ -32,6 +32,7 @@ def load(idx):
     df = df[~pd.isnull(df['TARGET'])].reset_index(drop=True)
     train = df[~df['SK_ID_CURR'].isin(fold['SK_ID_CURR'])].reset_index(drop=True)
     valid = df[df['SK_ID_CURR'].isin(fold['SK_ID_CURR'])].reset_index(drop=True)
+    print('valid: {}'.format(valid.shape))
     return train, valid, test
 
 

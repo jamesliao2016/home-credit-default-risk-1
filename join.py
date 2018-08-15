@@ -48,6 +48,7 @@ def merge_bure(df):
         './data/bureau.agg.feather',
         './data/bureau.grp.feather',
         './data/bureau.active.feather',
+        './data/bureau.closed.feather',
     ]:
         print('merge {}...'.format(fname))
         bure = pd.read_feather(fname)
@@ -96,6 +97,7 @@ def merge_cred(df):
         './data/credit.prev.last.feather',
         './data/credit.diff.feather',
         './data/credit.tail.feather',
+        './data/credit.trend.feather',
     ]:
         print('merge {}...'.format(fname))
         cred = pd.read_feather(fname)

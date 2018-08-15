@@ -20,8 +20,7 @@ def load(idx):
     print(df.shape)
     print('filter...')
     for fname in [
-        './data/filter.0813-2134.pkl',
-        './data/filter.0814-0834.pkl',
+        './data/filter.0816-0051.pkl',
     ]:
         with open(fname, 'rb') as fp:
             filt = pickle.load(fp)

@@ -49,7 +49,7 @@ def preprocess_application():
     # from https://www.kaggle.com/shep312/lightgbm-harder-better-slower
     df['CONSUMER_GOODS_RATIO'] = df['AMT_CREDIT'] / df['AMT_GOODS_PRICE']
     df['ANN_LENGTH_EMPLOYED_RATIO'] =\
-        df['ANNUITY_LENGTH'] / df['DAYS_EMPLOYED']
+        df['ANNUITY_LENGTH'] / (df['DAYS_EMPLOYED']-1)
     df['TOTAL_DOCS_SUBMITTED'] =\
         df.loc[:, df.columns.str.contains('FLAG_DOCUMENT')].sum(axis=1)
 
@@ -74,11 +74,11 @@ def preprocess_application():
         df[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']].std(axis=1)
     df['SCORES_STD'] = df['SCORES_STD'].fillna(df['SCORES_STD'].mean())
     df['CAR_TO_BIRTH_RATIO'] = df['OWN_CAR_AGE'] / df['DAYS_BIRTH']
-    df['CAR_TO_EMPLOY_RATIO'] = df['OWN_CAR_AGE'] / df['DAYS_EMPLOYED']
+    df['CAR_TO_EMPLOY_RATIO'] = df['OWN_CAR_AGE'] / (df['DAYS_EMPLOYED']-1)
     df['PHONE_TO_BIRTH_RATIO'] =\
         df['DAYS_LAST_PHONE_CHANGE'] / df['DAYS_BIRTH']
     df['PHONE_TO_EMPLOY_RATIO'] =\
-        df['DAYS_LAST_PHONE_CHANGE'] / df['DAYS_EMPLOYED']
+        df['DAYS_LAST_PHONE_CHANGE'] / (df['DAYS_EMPLOYED']-1)
 
     df.columns = [c.replace(' ', '_') for c in df.columns]
 

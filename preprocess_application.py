@@ -10,7 +10,6 @@ def preprocess_application():
     test_df = pd.read_feather('./data/application_test.feather')
     n_train = len(train_df)
     df = pd.concat([train_df, test_df], sort=False).reset_index(drop=True)
-    reduce_memory(df)
 
     df = df.drop([
         'FLAG_DOCUMENT_11',
@@ -81,6 +80,7 @@ def preprocess_application():
         df['DAYS_LAST_PHONE_CHANGE'] / (df['DAYS_EMPLOYED']-1)
 
     df.columns = [c.replace(' ', '_') for c in df.columns]
+    reduce_memory(df)
 
     train_df = df[:n_train].reset_index(drop=True)
     test_df = df[n_train:].reset_index(drop=True)

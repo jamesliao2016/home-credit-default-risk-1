@@ -10,6 +10,9 @@ def factorize(df):
     columns = df.select_dtypes([np.object]).columns.tolist()
     for c in columns:
         df[c], _ = pd.factorize(df[c])
+        nan = df[c].max() + 1
+        df[c] = df[c].replace(-1, nan)
+        df[c] = df[c].astype('category')
 
 
 def percentile(n):

@@ -3,7 +3,6 @@ import random
 import chainer
 import numpy as np
 import pandas as pd
-from sklearn.feature_selection import SelectFromModel
 import lightgbm as lgb
 
 

@@ -14,145 +14,42 @@ from chainer.training.updaters import StandardUpdater
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from utility import reset_seed
+from temporal_ensembling import TemporalEnsembling, create_dataset
 
 
 class UpdateExtention():
 
     __name__ = 'update-extention'
 
+    def __init__(self, dataset):
+        self.dataset = dataset
+
     def __call__(self, trainer: Trainer):
         t = trainer.updater.epoch
-        trainer.updater.get_optimizer('main').target.update(t)
-
-
-class TemporalEmsenbling(Chain):
-
-    def __init__(self, n):
-        super(TemporalEmsenbling, self).__init__()
-        with self.init_scope():
-            self.l1 = L.Linear(None, 128)
-            self.l2 = L.Linear(None, 64)
-            self.l3 = L.Linear(None, 1)
-
-        self.n = n
-        self.initialized = False
-
-    def reset(self):
-        xp = self.xp
-        self.z = xp.zeros((self.n, 1), dtype='f')  # temporal
-        self.Z = xp.zeros((self.n, 1), dtype='f')  # ensemble prediction
-        self.z_hat = xp.zeros((self.n, 1), dtype='f')  # target vector
-
-    def update(self, t):
-        alpha = 0.6
-        xp = self.xp
-        self.Z = alpha * self.Z + (1.-alpha) * self.z
-        self.z_hat = self.Z / (1.-xp.power(alpha, t))
-        self.z = xp.zeros((self.n, 1))
-
-    def forward(self, x):
-        # TODO: augmentation
-        h = self.l1(x)
-        h = F.relu(h)
-        h = F.dropout(h)
-        h = self.l2(h)
-        h = F.relu(h)
-        h = F.dropout(h)
-        h = self.l3(h)
-        return h
-
-    def __call__(self, data):
-        if not self.initialized:
-            self.reset()
-
-        x = data[:, :-2]  # features
-        i = data[:, -2].astype('i')  # index
-        y = data[:, -1:]  # label
-
-        h = self.forward(x)
-
-        self.z[i] = h.array
-
-        xp = self.xp
-        idx = ~xp.isnan(y)
-
-        loss = 0
-        loss += F.bernoulli_nll(y[idx], h[idx]) / len(y[idx])
-        loss += F.mean_squared_error(h, self.z_hat[i])
-
-        a = cuda.to_cpu(y[idx]).reshape(-1).astype('i')
-        b = cuda.to_cpu(F.sigmoid(h)[idx].array).reshape(-1)
-        score = roc_auc_score(a, b)
-
-        chainer.report({'loss': loss}, self)
-        chainer.report({'score': score}, self)
-
-        return loss
+        model = trainer.updater.get_optimizer('main').target
+        model.update(t)
+        model.validate(**self.dataset[range(len(self.dataset))])
 
 
 def main():
     reset_seed(0)
-    train = pd.read_feather('./data/application_train.preprocessed.feather')
-    test = pd.read_feather('./data/application_test.preprocessed.feather')
-    test['TARGET'] = np.nan
+    df = pd.read_feather('./data/features.normalized.feather')
+    fold = pd.read_feather('./data/fold.0.feather')
 
-    df = pd.concat([train, test], sort=False).reset_index(drop=True)
-    df['index'] = np.arange(len(df))
+    df['valid'] = df['SK_ID_CURR'].isin(fold['SK_ID_CURR'])
+    model = TemporalEnsembling(df)
 
-    features = [
-        'EXT_SOURCE_1',
-        'EXT_SOURCE_2',
-        'EXT_SOURCE_3',
-        'EXT_SOURCES_MEAN',
-        'ANNUITY_LENGTH',
-        'CONSUMER_GOODS_RATIO',
-        'DAYS_EMPLOYED',
-        'DAYS_EMPLOYED_PERC',
-        'INCOME_CREDIT_PERC',
-        'INCOME_PER_PERSON',
-        'ANNUITY_INCOME_PERC',
-        'LOAN_INCOME_RATIO',
-        'ANNUITY_INCOME_RATIO',
-        'WORKING_LIFE_RATIO',
-        'INCOME_PER_FAM',
-        'CHILDREN_RATIO',
-    ]
-    for c in features:
-        m = df[c].mean()
-        df.loc[pd.isnull(df[c]), c] = m
-        s = df[c].std()
-        df[c] -= m
-        df[c] /= s
-
-    train = df[pd.notnull(df['TARGET'])]
-    test = df[pd.isnull(df['TARGET'])]
-
-    features += ['index', 'TARGET']
-    train_dset = train[features].values.astype('f')
-    test_dset = test[features].values.astype('f')
-
-    train_dset, valid_dset = train_test_split(
-        train_dset, test_size=0.20, random_state=215,
-        stratify=train['TARGET'])
-
-    train_dset = np.vstack([train_dset, test_dset])
-    print(train_dset.shape)
-
+    train_dset = create_dataset(df, 'TARGET', 'valid')
     train_iter = SerialIterator(train_dset, 512)
-    valid_iter = SerialIterator(valid_dset, len(valid_dset), False, False)
-
-    model = TemporalEmsenbling(len(df))
 
     optimizer = Adam()
     optimizer.setup(model)
     updater = StandardUpdater(train_iter, optimizer, device=0)
     trainer = Trainer(updater, (10, 'epoch'), out='tempem_result')
-    trainer.extend(make_extension((1, 'epoch'))(UpdateExtention()))
+    trainer.extend(make_extension((1, 'epoch'))(UpdateExtention(train_dset)))
     trainer.extend(extensions.LogReport())
     trainer.extend(extensions.snapshot(
         filename='snapshot_epoch-{.updater.epoch}'))
-    trainer.extend(extensions.Evaluator(
-        valid_iter, model, device=0), name='val')
     trainer.extend(extensions.PrintReport([
         'epoch', 'main/loss', 'main/score',
         'val/main/loss', 'val/main/score',

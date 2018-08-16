@@ -12,7 +12,11 @@ def main():
         df[c] -= m
         df[c].fillna(0, inplace=True)
         s = df[c].std()
-        df[c] /= s
+        if pd.isnull(s):
+            print(c, s)
+            df.pop(c)
+        else:
+            df[c] /= s
     df.to_feather('./data/features.normalized.feather')
 
 

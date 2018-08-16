@@ -12,7 +12,7 @@ def main():
         df[c] -= m
         df[c].fillna(0, inplace=True)
         s = df[c].std()
-        if pd.isnull(s):
+        if pd.isnull(s) or abs(s) < 1e-6:
             print(c, s)
             df.pop(c)
         else:

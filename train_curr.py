@@ -25,6 +25,9 @@ def load(idx):
         with open(fname, 'rb') as fp:
             filt = pickle.load(fp)
             df = df.drop(filt, axis=1)
+    for c in df.columns:
+        if str(df[c].dtype) == 'category':
+            df[c] = df[c].astype('int16')
     print(df.shape)
     print('split...')
     test = df[pd.isnull(df['TARGET'])].reset_index(drop=True)

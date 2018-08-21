@@ -1,19 +1,17 @@
 import matplotlib
 matplotlib.use('Agg')  # noqa
+import pandas as pd
 import chainer
 import numpy as np
-import pandas as pd
-import chainer.links as L
-import chainer.functions as F
-from chainer import Chain, cuda
+from chainer import cuda
+from chainer.dataset import concat_examples
 from chainer.optimizers import Adam
 from chainer.training import Trainer
 from chainer.training import extensions, make_extension
 from chainer.iterators import SerialIterator
 from chainer.training.updaters import StandardUpdater
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import train_test_split
 from utility import reset_seed
+from sklearn.metrics import roc_auc_score
 from temporal_ensembling import TemporalEnsembling, create_dataset
 
 
@@ -21,18 +19,27 @@ class UpdateExtention():
 
     __name__ = 'update-extention'
 
-    def __init__(self, dataset):
+    def __init__(self, dataset, filename):
         self.dataset = dataset
+        self.filename = filename
 
     def __call__(self, trainer: Trainer):
-        t = trainer.updater.epoch
         model = trainer.updater.get_optimizer('main').target
-        model.update(t)
-        model.validate(**self.dataset[range(len(self.dataset))])
+        model.update(trainer.updater.epoch)
+        X = concat_examples(self.dataset, trainer.updater.device)
+        valid = cuda.to_cpu(X['valid'])
+        y_true = cuda.to_cpu(X['target'].reshape(-1, 1))
+        y_score = cuda.to_cpu(model.predict())
+        auc = roc_auc_score(y_true[valid], y_score[valid])
+        chainer.report({'val/auc': auc}, model)
+        with chainer.using_config('train', False), chainer.using_config('enable_backprop', False):
+            f = cuda.to_cpu(model.forward(X, return_feature=True).array)
+            f = np.concatenate([y_score, f], axis=1)
+            df = pd.DataFrame(f, columns=[' nn_{}'.format(i) for i in range(f.shape[1])])
+            df.to_feather(self.filename)
 
 
-def main():
-    reset_seed(0)
+def train(idx):
     df = pd.read_feather('./data/features.normalized.feather')
     fold = pd.read_feather('./data/fold.0.feather')
 
@@ -45,20 +52,23 @@ def main():
     optimizer = Adam()
     optimizer.setup(model)
     updater = StandardUpdater(train_iter, optimizer, device=0)
-    trainer = Trainer(updater, (10, 'epoch'), out='tempem_result')
-    trainer.extend(make_extension((1, 'epoch'))(UpdateExtention(train_dset)))
+    trainer = Trainer(updater, (20, 'epoch'), out='tempem_result')
+    trainer.extend(make_extension((1, 'epoch'))(
+        UpdateExtention(train_dset, './data/nn.fold.{}.feather'.format(idx))))
     trainer.extend(extensions.LogReport())
+    filename = 'fold_%d_snapshot_epoch-{.updater.epoch}' % (idx)
     trainer.extend(extensions.snapshot(
-        filename='snapshot_epoch-{.updater.epoch}'))
+        filename=filename))
     trainer.extend(extensions.PrintReport([
-        'epoch', 'main/loss', 'main/score',
-        'val/main/loss', 'val/main/score',
+        'epoch', 'main/loss', 'main/val/auc',
         'elapsed_time']))
-    trainer.extend(extensions.PlotReport(
-        ['main/loss', 'val/main/loss'],
-        x_key='epoch', file_name='loss.png'))
-    trainer.extend(extensions.dump_graph('main/loss'))
     trainer.run()
+
+
+def main():
+    reset_seed(0)
+    for i in range(5):
+        train(i)
 
 
 if __name__ == '__main__':

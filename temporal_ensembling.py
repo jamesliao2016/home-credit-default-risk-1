@@ -1,16 +1,9 @@
 import chainer
 import chainer.links as L
 import chainer.functions as F
-from chainer import Chain, cuda
-from chainer.optimizers import Adam
+from chainer import Chain
 from chainer.datasets import DictDataset
 from chainer.training import Trainer
-from chainer.training import extensions, make_extension
-from chainer.iterators import SerialIterator
-from chainer.training.updaters import StandardUpdater
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import train_test_split
-from utility import reset_seed
 
 
 def create_dataset(df, target, valid):
@@ -46,16 +39,19 @@ class UpdateExtention():
         trainer.updater.get_optimizer('main').target.update(t)
 
 
-class Model(Chain):
+class Block(Chain):
 
-    def __init__(self, n):
-        super(Model, self).__init__()
+    def __init__(self, n_out):
+        super(Block, self).__init__()
         with self.init_scope():
-            self.l1 = L.Linear(None, 128)
-            self.l2 = L.Linear(None, 64)
-            self.l3 = L.Linear(None, 1)
+            self.li = L.Linear(None, n_out)
+            self.bn = L.BatchNormalization(n_out)
 
-        self.n = n
+    def __call__(self, h):
+        h = self.li(h)
+        h = self.bn(h)
+        h = F.relu(h)
+        return h
 
 
 class TemporalEnsembling(Chain):
@@ -71,17 +67,16 @@ class TemporalEnsembling(Chain):
                     continue
                 self.cats.append(c)
                 num_cat = len(df[c].cat.categories)
-                print(df[c].cat.categories, num_cat)
-                out_size = min(30, num_cat // 2)
+                out_size = min(20, num_cat // 2)
                 setattr(self, c, L.EmbedID(num_cat, out_size))
 
-            self.l1 = L.Linear(None, 1200)
-            self.bn1 = L.BatchNormalization(1200)
-            self.l2 = L.Linear(None, 800)
-            self.bn2 = L.BatchNormalization(800)
-
-            self.l3 = L.Linear(None, 1)
-        print(self.cats)
+            self.b1 = Block(2048)
+            self.b2 = Block(1024)
+            self.b3 = Block(512)
+            self.b4 = Block(256)
+            self.b5 = Block(128)
+            self.b6 = Block(64)
+            self.l1 = L.Linear(None, 1)
 
     def update(self, t):
         alpha = 0.6
@@ -97,17 +92,11 @@ class TemporalEnsembling(Chain):
         self.z_hat = xp.zeros((self.n, 1), dtype='f')  # target vector
         self.initialized = True
 
-    def validate(self, **X):
-        valid = X['valid'].reshape(-1, 1)
+    def predict(self, **X):
+        p = F.sigmoid(self.Z).array
+        return p
 
-        y = X['target'].reshape(-1, 1)
-        a = cuda.to_cpu(y[valid]).reshape(-1).astype('i')
-        b = cuda.to_cpu(F.sigmoid(self.Z)[valid].array).reshape(-1)
-        score = roc_auc_score(a, b)
-
-        chainer.report({'score': score}, self)
-
-    def forward(self, X):
+    def forward(self, X, return_feature=False):
         h = []
         for c in self.cats:
             embed = getattr(self, c)
@@ -117,15 +106,17 @@ class TemporalEnsembling(Chain):
             h.append(X['numerical'])
 
         h = F.concat(h, axis=1)
-        h = self.l1(h)
-        h = self.bn1(h)
-        h = F.dropout(h, 0.1)
-        h = F.relu(h)
-        h = self.l2(h)
-        h = self.bn2(h)
-        h = F.dropout(h, 0.1)
+        h = self.b1(h)
+        h = self.b2(h)
+        h = self.b3(h)
+        h = self.b4(h)
+        h = self.b5(h)
+        h = self.b6(h)
 
-        h = self.l3(h)
+        if return_feature:
+            return h
+
+        h = self.l1(h)
 
         return h
 
@@ -142,9 +133,11 @@ class TemporalEnsembling(Chain):
         h = self.forward(X)
         self.z[index] = h.array
 
+        bn_loss = F.bernoulli_nll(y[notnull], h[notnull], reduce='no')
+        bn_loss = F.mean(bn_loss * (1 + y[notnull]*15))
         loss = 0
-        loss += F.bernoulli_nll(y[notnull], h[notnull])
         loss += F.mean_squared_error(h, self.z_hat[index])
+        loss += bn_loss
 
         chainer.report({'loss': loss}, self)
 

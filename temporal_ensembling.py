@@ -90,6 +90,7 @@ class TemporalEnsembling(Chain):
         self.z = xp.zeros((self.n, 1), dtype='f')  # temporal
         self.Z = xp.zeros((self.n, 1), dtype='f')  # ensemble prediction
         self.z_hat = xp.zeros((self.n, 1), dtype='f')  # target vector
+        self.feature = xp.zeros((self.n, 64), dtype='f')
         self.initialized = True
 
     def predict(self, **X):
@@ -112,13 +113,9 @@ class TemporalEnsembling(Chain):
         h = self.b4(h)
         h = self.b5(h)
         h = self.b6(h)
+        z = self.l1(h)
 
-        if return_feature:
-            return h
-
-        h = self.l1(h)
-
-        return h
+        return z, h
 
     def __call__(self, **X):
         if not self.initialized:
@@ -130,13 +127,14 @@ class TemporalEnsembling(Chain):
         valid = X['valid'].reshape(-1, 1)
         notnull = (~xp.isnan(y)) & (~valid)
 
-        h = self.forward(X)
-        self.z[index] = h.array
+        z, feature = self.forward(X)
+        self.z[index] = z.array
+        self.feature[index] = feature.array
 
-        bn_loss = F.bernoulli_nll(y[notnull], h[notnull], reduce='no')
+        bn_loss = F.bernoulli_nll(y[notnull], z[notnull], reduce='no')
         bn_loss = F.mean(bn_loss * (1 + y[notnull]*15))
         loss = 0
-        loss += F.mean_squared_error(h, self.z_hat[index])
+        loss += F.mean_squared_error(z, self.z_hat[index])
         loss += bn_loss
 
         chainer.report({'loss': loss}, self)

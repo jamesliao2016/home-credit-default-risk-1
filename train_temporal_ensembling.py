@@ -4,7 +4,6 @@ import pandas as pd
 import chainer
 import numpy as np
 from chainer import cuda
-from chainer.dataset import concat_examples
 from chainer.optimizers import Adam
 from chainer.training import Trainer
 from chainer.training import extensions, make_extension
@@ -20,28 +19,30 @@ class UpdateExtention():
     __name__ = 'update-extention'
 
     def __init__(self, dataset, filename):
-        self.dataset = dataset
+        d = dataset[range(len(dataset))]
+        self.dataset = {'valid': d['valid'], 'target': d['target']}
         self.filename = filename
 
     def __call__(self, trainer: Trainer):
+        print('update')
         model = trainer.updater.get_optimizer('main').target
         model.update(trainer.updater.epoch)
-        X = concat_examples(self.dataset, trainer.updater.device)
-        valid = cuda.to_cpu(X['valid'])
-        y_true = cuda.to_cpu(X['target'].reshape(-1, 1))
+        valid = self.dataset['valid']
+        y_true = self.dataset['target'].reshape(-1, 1)
         y_score = cuda.to_cpu(model.predict())
         auc = roc_auc_score(y_true[valid], y_score[valid])
         chainer.report({'val/auc': auc}, model)
         with chainer.using_config('train', False), chainer.using_config('enable_backprop', False):
-            f = cuda.to_cpu(model.forward(X, return_feature=True).array)
+            f = cuda.to_cpu(model.feature)
             f = np.concatenate([y_score, f], axis=1)
             df = pd.DataFrame(f, columns=[' nn_{}'.format(i) for i in range(f.shape[1])])
             df.to_feather(self.filename)
 
 
 def train(idx):
+    print('train by fold: {}'.format(idx))
     df = pd.read_feather('./data/features.normalized.feather')
-    fold = pd.read_feather('./data/fold.0.feather')
+    fold = pd.read_feather('./data/fold.{}.feather'.format(idx))
 
     df['valid'] = df['SK_ID_CURR'].isin(fold['SK_ID_CURR'])
     model = TemporalEnsembling(df)

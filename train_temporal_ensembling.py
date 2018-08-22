@@ -35,7 +35,7 @@ class UpdateExtention():
         with chainer.using_config('train', False), chainer.using_config('enable_backprop', False):
             f = cuda.to_cpu(model.feature)
             f = np.concatenate([y_score, f], axis=1)
-            df = pd.DataFrame(f, columns=[' nn_{}'.format(i) for i in range(f.shape[1])])
+            df = pd.DataFrame(f, columns=['nn_{}'.format(i) for i in range(f.shape[1])])
             df.to_feather(self.filename)
 
 

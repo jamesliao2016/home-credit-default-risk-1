@@ -50,7 +50,7 @@ class Block(Chain):
     def __call__(self, h):
         h = self.li(h)
         h = self.bn(h)
-        h = F.relu(h)
+        h = F.leaky_relu(h, 0.1)
         return h
 
 

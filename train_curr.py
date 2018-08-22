@@ -16,7 +16,11 @@ def load(idx):
     print('load {}'.format(fold))
     fold = pd.read_feather(fold)
     print('load features...')
-    df = pd.read_feather('./data/features.feather')
+    df = pd.read_feather('./data/features.feather').set_index('SK_ID_CURR')
+    nn = pd.read_feather('./data/nn.feather').set_index('SK_ID_CURR')
+    df['nn'] = nn['nn_0']
+    del nn
+    df = df.reset_index()
     print(df.shape)
     print('filter...')
     for fname in [

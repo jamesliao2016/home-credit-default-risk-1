@@ -74,7 +74,7 @@ def train(idx):
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': 'auc',
-        'learning_rate': 0.05,
+        'learning_rate': 0.02,
         'max_bin': 300,
         'num_leaves': 30,
         'max_depth': -1,  # -1 means no limit
@@ -94,7 +94,7 @@ def train(idx):
         valid_sets=[xgtrain, xgvalid],
         valid_names=['train', 'valid'],
         evals_result=evals_result,
-        num_boost_round=2000,
+        num_boost_round=3000,
         early_stopping_rounds=200,
         verbose_eval=50,
         categorical_feature=[],

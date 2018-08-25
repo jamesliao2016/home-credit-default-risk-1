@@ -35,6 +35,7 @@ def merge_app(df):
     for fname in [
         './data/app.agg.feather',
         './data/app.grp.diff.feather',
+        './data/app.enc.feather',
     ]:
         print('merge {}...'.format(fname))
         app = pd.read_feather(fname)

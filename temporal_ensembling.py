@@ -1,3 +1,4 @@
+import math
 import chainer
 import chainer.links as L
 import chainer.functions as F
@@ -59,6 +60,8 @@ class TemporalEnsembling(Chain):
     def __init__(self, df):
         super(TemporalEnsembling, self).__init__()
         self.initialized = False
+        self.semi_weight = 0
+        self.C = 2
         with self.init_scope():
             self.n = df.shape[0]
             self.cats = []
@@ -84,6 +87,8 @@ class TemporalEnsembling(Chain):
         self.Z = alpha * self.Z + (1.-alpha) * self.z
         self.z_hat = (self.Z / (1.-xp.power(alpha, t))).astype('f')
         self.z = xp.zeros((self.n, 1))
+        self.semi_weight = math.exp(-5*(1-t/20))
+        print(self.semi_weight)
 
     def reset(self):
         xp = self.xp
@@ -133,9 +138,9 @@ class TemporalEnsembling(Chain):
 
         bn_loss = F.bernoulli_nll(y[notnull], z[notnull], reduce='no')
         bn_loss = F.mean(bn_loss * (1 + y[notnull]*15))
-        loss = 0
-        loss += F.mean_squared_error(z, self.z_hat[index])
-        loss += bn_loss
+        semi_loss = self.semi_weight * F.mean_squared_error(z, self.z_hat[index]) / self.C
+
+        loss = bn_loss + semi_loss
 
         chainer.report({'loss': loss}, self)
 

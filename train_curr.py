@@ -20,6 +20,10 @@ def load(idx):
     nn = pd.read_feather('./data/nn.feather').set_index('SK_ID_CURR')
     df['nn'] = nn['nn_0']
     del nn
+    enc = pd.read_feather('./data/app.enc.feather').set_index('SK_ID_CURR')
+    for c in enc.columns:
+        df[c] = enc[c]
+    del enc
     df = df.reset_index()
     print(df.shape)
     print('filter...')

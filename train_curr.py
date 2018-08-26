@@ -1,6 +1,7 @@
 import os
 import gc
 import pickle
+import argparse
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -42,7 +43,8 @@ def load(idx):
     return train, valid, test
 
 
-def train(idx):
+def train(idx, seed, param_idx):
+    print('seed {}, param_idx {}'.format(seed, param_idx))
     train, valid, test = load(idx)
     gc.collect()
 
@@ -66,26 +68,47 @@ def train(idx):
     del valid
     gc.collect()
     evals_result = {}
-    lgb_params = {
-        'boosting_type': 'gbdt',
-        'objective': 'binary',
-        'metric': 'auc',
-        'learning_rate': 0.02,
-        'max_bin': 300,
-        'num_leaves': 30,
-        'max_depth': -1,  # -1 means no limit
-        'subsample': 1.0,
-        'colsample_bytree': 0.05,
-        # 'min_child_weight': 40,
-        'min_child_samples': 70,
-        'min_split_gain': 0.5,
-        'reg_alpha': 0,
-        'reg_lambda': 100,
-        'nthread': 12,
-        'verbose': 0,
-    }
+    params = [
+        {
+            'boosting_type': 'gbdt',
+            'objective': 'binary',
+            'metric': 'auc',
+            'learning_rate': 0.02,
+            'max_bin': 300,
+            'num_leaves': 30,
+            'max_depth': -1,  # -1 means no limit
+            'subsample': 1.0,
+            'colsample_bytree': 0.70,
+            'min_child_weight': 200,
+            'min_child_samples': 70,
+            'min_split_gain': 0.5,
+            'reg_alpha': 0,
+            'reg_lambda': 100,
+            'nthread': 12,
+            'verbose': 0,
+            'seed': seed,
+        },
+        {
+            'objective': 'binary',
+            'boosting_type': 'gbdt',
+            'nthread': 12,
+            'learning_rate': 0.02,
+            'num_leaves': 20,
+            'colsample_bytree': 0.9497036,
+            'subsample': 0.8715623,
+            'subsample_freq': 1,
+            'max_depth': 8,
+            'reg_alpha': 0.041545473,
+            'reg_lambda': 0.0735294,
+            'min_split_gain': 0.0222415,
+            'min_child_weight': 60,
+            'verbose': -1,
+            'metric': 'auc',
+            'seed': seed,
+        }
+    ]
     bst = lgb.train(
-        lgb_params,
+        params[param_idx],
         xgtrain,
         valid_sets=[xgtrain, xgvalid],
         valid_names=['train', 'valid'],
@@ -112,6 +135,11 @@ def train(idx):
 def main():
     np.random.seed(215)
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', required=True, type=int)
+    parser.add_argument('--param-idx', required=True, type=int)
+    args = parser.parse_args()
+
     debug = False
     print('debug: {}'.format(debug))
     gc.collect()
@@ -119,7 +147,7 @@ def main():
     auc_summary = []
     results = []
     for i in range(5):
-        res, score = train(i)
+        res, score = train(i, args.seed, args.param_idx)
         gc.collect()
         results.append(res)
         auc_summary.append(score)
@@ -138,7 +166,8 @@ def main():
     res['TARGET'] /= res['TARGET'].max()
     res = res.reset_index()
     os.makedirs('./output', exist_ok=True)
-    path = os.path.join('./output', '{}.csv.gz'.format(now))
+    path = os.path.join(
+        './output', '{}.seed.{}.param.{}.csv.gz'.format(now, args.seed, args.param_idx))
     print('save {}'.format(path))
     res.to_csv(path, index=False, compression='gzip')
 

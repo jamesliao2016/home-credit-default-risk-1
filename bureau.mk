@@ -16,3 +16,9 @@ data/bureau.agg.feather: data/bureau.preprocessed.feather aggregate_bureau.py
 data/bureau.active.feather: data/bureau.preprocessed.feather create_bureau_active.py
 	python create_bureau_active.py
 
+data/bureau.closed.feather: data/bureau.preprocessed.feather ./create_bureau_closed.py
+	python create_bureau_closed.py
+
+data/bureau.grp.feather: data/bureau.preprocessed.feather ./create_bureau_grp.py
+	python create_bureau_grp.py
+

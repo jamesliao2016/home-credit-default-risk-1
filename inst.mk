@@ -14,3 +14,5 @@ data/inst.tail.feather: $(INST_PREP) create_inst_tail.py
 	python create_inst_tail.py
 data/inst.diff.feather: $(INST_PREP) create_inst_diff.py
 	python create_inst_diff.py
+data/inst.trend.feather: $(INST_PREP) create_inst_trend.py
+	python create_inst_trend.py
